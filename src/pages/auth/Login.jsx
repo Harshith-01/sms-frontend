@@ -25,13 +25,13 @@ export default function Login() {
       setLoading(false);
       message.success('Login successful!');
       
-      if (values.role === 'admin') {
-        navigate('/admin/dashboard');
-      } else if (values.role === 'teacher') {
-        navigate('/teacher/dashboard');
-      } else {
-        navigate('/student/dashboard');
-      }
+      // Store user info in localStorage
+      localStorage.setItem('userName', values.email.split('@')[0]); // Extract name from email
+      localStorage.setItem('userEmail', values.email);
+      localStorage.setItem('userRole', values.role);
+      
+      // Redirect to dashboard
+      navigate('/dashboard');
     }, 1000);
   };
 
