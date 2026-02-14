@@ -1,0 +1,56 @@
+.quick-action-card {
+  height: 100%;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  border: 2px dashed var(--border-color);
+  background: var(--bg-primary);
+  text-align: center;
+}
+
+.quick-action-card:hover {
+  border-color: var(--primary-color);
+  border-style: solid;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-4px);
+}
+
+.quick-action-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--spacing-md);
+  font-size: 28px;
+  transition: all var(--transition-base);
+}
+
+.quick-action-card:hover .quick-action-icon {
+  transform: scale(1.1) rotate(-5deg);
+}
+
+.quick-action-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.quick-action-card:hover .quick-action-title {
+  color: var(--primary-color);
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .quick-action-icon {
+    width: 56px;
+    height: 56px;
+    font-size: 24px;
+  }
+
+  .quick-action-title {
+    font-size: var(--font-size-md);
+  }
+}

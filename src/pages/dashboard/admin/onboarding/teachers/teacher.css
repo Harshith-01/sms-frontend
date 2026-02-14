@@ -1,0 +1,323 @@
+/* ==================== TEACHER LIST ==================== */
+.teacher-list-container {
+  padding: 0;
+}
+
+.teacher-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary, #262626);
+  margin: 0 0 4px 0;
+  letter-spacing: -0.5px;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: var(--text-tertiary, #8c8c8c);
+  margin: 0;
+}
+
+.add-teacher-btn {
+  background: var(--primary-color, #667eea);
+  border-color: var(--primary-color, #667eea);
+}
+
+.add-teacher-btn:hover {
+  background: var(--primary-dark, #5568d3);
+  border-color: var(--primary-dark, #5568d3);
+}
+
+/* Filter Card */
+.filter-card {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.filter-card .ant-card-body {
+  padding: 24px;
+}
+
+/* Save Banner */
+.save-banner {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  padding: 16px 24px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.save-banner span {
+  color: #856404;
+  font-weight: 500;
+}
+
+/* Table Card */
+.table-card {
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.table-card .ant-card-body {
+  padding: 0;
+}
+
+.table-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.table-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary, #262626);
+}
+
+.teacher-count {
+  font-size: 14px;
+  color: var(--text-tertiary, #8c8c8c);
+  background: #f5f5f5;
+  padding: 4px 12px;
+  border-radius: 12px;
+}
+
+/* Table Styles */
+.teacher-table .ant-table {
+  font-size: 14px;
+}
+
+.teacher-table .ant-table-thead > tr > th {
+  background: #fafafa;
+  font-weight: 600;
+  color: var(--text-primary, #262626);
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.teacher-table .ant-table-tbody > tr:hover > td {
+  background: #f5f5ff;
+}
+
+.teacher-id {
+  font-weight: 600;
+  color: var(--primary-color, #667eea);
+}
+
+.teacher-name {
+  font-weight: 500;
+  color: var(--text-primary, #262626);
+}
+
+/* Action Buttons */
+.action-btn {
+  font-size: 16px;
+  padding: 4px;
+}
+
+.view-btn {
+  color: var(--primary-color, #667eea);
+}
+
+.view-btn:hover {
+  color: var(--primary-dark, #5568d3);
+}
+
+.delete-btn {
+  color: #ff4d4f;
+}
+
+.delete-btn:hover {
+  color: #d9363e;
+}
+
+/* ==================== ADD TEACHER ==================== */
+.add-teacher-container {
+  padding: 0;
+}
+
+.add-teacher-header {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bulk-upload-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.bulk-upload-btn:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #6a3d8f 100%);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  transform: translateY(-1px);
+}
+
+.add-teacher-card {
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.form-section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary, #262626);
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+/* Form Styles */
+.add-teacher-card .ant-form-item-label > label {
+  font-weight: 500;
+  color: var(--text-secondary, #595959);
+}
+
+.add-teacher-card .ant-input,
+.add-teacher-card .ant-select-selector,
+.add-teacher-card .ant-picker {
+  border-radius: 8px;
+}
+
+.add-teacher-card .ant-input:focus,
+.add-teacher-card .ant-select-focused .ant-select-selector,
+.add-teacher-card .ant-picker-focused {
+  border-color: var(--primary-color, #667eea);
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+.add-teacher-card .ant-radio-wrapper {
+  margin-right: 24px;
+}
+
+/* Buttons */
+.add-teacher-card .save-btn {
+  background: #ffc107;
+  border-color: #ffc107;
+  color: #000;
+  font-weight: 600;
+  min-width: 120px;
+}
+
+.add-teacher-card .save-btn:hover {
+  background: #ffb300;
+  border-color: #ffb300;
+}
+
+.add-teacher-card .reset-btn {
+  background: #1e3a8a;
+  border-color: #1e3a8a;
+  color: #fff;
+  font-weight: 600;
+  min-width: 120px;
+}
+
+.add-teacher-card .reset-btn:hover {
+  background: #1e40af;
+  border-color: #1e40af;
+}
+
+.add-teacher-card .reset-btn:hover {
+  background: #1e40af;
+  border-color: #1e40af;
+}
+
+/* Bulk Upload Section */
+.bulk-upload-section {
+  padding-top: 8px;
+}
+
+.bulk-upload-section .ant-alert {
+  border-radius: 8px;
+}
+
+.bulk-upload-section .ant-alert ul {
+  margin: 12px 0 0 0;
+  padding-left: 20px;
+}
+
+.bulk-upload-section .ant-alert code {
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #1890ff;
+}
+
+/* Tabs */
+.add-teacher-card .ant-tabs-nav {
+  margin-bottom: 24px;
+}
+
+.add-teacher-card .ant-tabs-tab {
+  font-size: 16px;
+  font-weight: 500;
+  padding: 12px 24px;
+}
+
+.add-teacher-card .ant-tabs-tab-active {
+  color: var(--primary-color, #667eea);
+}
+
+/* Upload */
+.add-teacher-card .ant-upload-list {
+  margin-top: 8px;
+}
+
+/* Bulk Upload Modal */
+.bulk-upload-modal-content {
+  padding: 8px 0;
+}
+
+.bulk-upload-modal-content .ant-alert {
+  border-radius: 8px;
+}
+
+.bulk-upload-modal-content .ant-alert ul {
+  margin: 12px 0 0 0;
+  padding-left: 20px;
+}
+
+.bulk-upload-modal-content .ant-alert code {
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #1890ff;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .teacher-list-header,
+  .add-teacher-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .page-title {
+    font-size: 24px;
+  }
+
+  .teacher-table {
+    font-size: 12px;
+  }
+
+  .action-btn {
+    font-size: 14px;
+  }
+}

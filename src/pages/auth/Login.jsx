@@ -1,113 +1,142 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Form, Input, Button, Card, Divider, Select, message } from 'antd';
-import { GoogleOutlined, SyncOutlined } from '@ant-design/icons';
-import AuthLayout from '../../components/layouts/AuthLayout';
+import { Form, Input, Button, message, Select } from 'antd';
+import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
+import axios from 'axios';
+import './Auth.css';
 
 const { Option } = Select;
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export default function Login() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  const onFinish = (values) => {
+  // Decode JWT to get role
+  const decodeToken = (token) => {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      return JSON.parse(jsonPayload);
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      return null;
+    }
+  };
+
+  const handleLogin = async (values) => {
     setLoading(true);
 
-    const loginData = {
-      email: values.email,
-      password: values.password,
-      role: values.role,
-    };
+    try {
+      // ⚠️ DEVELOPMENT ONLY - REMOVE BEFORE PRODUCTION ⚠️
+      if (values.email === 'admin@test.com' && values.password === 'Admin@123') {
+        const testToken = 'test_token_admin';
+        localStorage.setItem('token', testToken);
+        localStorage.setItem('userRole', 'ADMIN');
+        message.success('Login successful (Test Mode)');
+        navigate('/admin/dashboard');
+        setLoading(false);
+        return;
+      }
+      // ⚠️ END DEVELOPMENT ONLY CODE ⚠️
 
-    console.log('Login Data:', loginData);
+      const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+        email: values.email,
+        password: values.password,
+      });
 
-    setTimeout(() => {
+      const { access_token, token_type } = response.data;
+
+      localStorage.setItem('token', access_token);
+      localStorage.setItem('tokenType', token_type);
+
+      const decoded = decodeToken(access_token);
+      
+      if (decoded && decoded.role) {
+        const role = decoded.role.toUpperCase();
+        localStorage.setItem('userRole', role);
+        localStorage.setItem('userId', decoded.user_id || decoded.sub);
+        localStorage.setItem('userEmail', decoded.email || values.email);
+
+        message.success('Login successful');
+
+        switch (role) {
+          case 'ADMIN':
+            navigate('/admin/dashboard');
+            break;
+          case 'TEACHER':
+            navigate('/teacher/dashboard');
+            break;
+          case 'STUDENT':
+            navigate('/student/dashboard');
+            break;
+          default:
+            navigate('/admin/dashboard');
+        }
+      } else {
+        message.error('Invalid token received');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      
+      if (error.response) {
+        const status = error.response.status;
+        const detail = error.response.data?.detail || 'Login failed';
+        
+        if (status === 401) {
+          message.error('Invalid email or password');
+        } else if (status === 422) {
+          message.error('Please check your email and password format');
+        } else {
+          message.error(detail);
+        }
+      } else if (error.request) {
+        message.error('Cannot connect to server. Please check your connection.');
+      } else {
+        message.error('An error occurred. Please try again.');
+      }
+    } finally {
       setLoading(false);
-      message.success('Login successful!');
-      
-      // Store user info in localStorage
-      localStorage.setItem('userName', values.email.split('@')[0]); // Extract name from email
-      localStorage.setItem('userEmail', values.email);
-      localStorage.setItem('userRole', values.role);
-      
-      // Redirect to dashboard
-      navigate('/dashboard');
-    }, 1000);
+    }
   };
 
   return (
-    <AuthLayout>
-      <Card
-        style={{
-          width: 450,
-          borderRadius: 16,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-        }}
-        bodyStyle={{ padding: '48px 40px' }}
-      >
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div
-            style={{
-              width: 64,
-              height: 64,
-              margin: '0 auto 24px',
-              background: '#5B7FFF',
-              borderRadius: 16,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <SyncOutlined style={{ fontSize: 32, color: '#fff' }} />
+    <div className="auth-page">
+      <div className="auth-container">
+        <div className="auth-logo">
+          <div className="logo-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+            </svg>
           </div>
-          <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0, color: '#262626' }}>
-            Sign in
-          </h1>
-          <p style={{ fontSize: 14, color: '#8c8c8c', marginTop: 8 }}>
-            Don't have an account?{' '}
-            <Link to="/register" style={{ color: '#5B7FFF', fontWeight: 500 }}>
-              Register as Admin
-            </Link>
-          </p>
         </div>
 
-        <Button
-          icon={<GoogleOutlined />}
-          size="large"
-          block
-          style={{
-            marginBottom: 20,
-            height: 48,
-            borderRadius: 8,
-            fontSize: 15,
-            fontWeight: 500,
-          }}
-        >
-          Continue with Google
-        </Button>
-
-        <Divider style={{ fontSize: 13, color: '#bfbfbf' }}>or sign in using email</Divider>
+        <h1 className="auth-title">Sign in</h1>
+        <p className="auth-subtitle">
+          Don't have an account? <Link to="/register">Register as Admin</Link>
+        </p>
 
         <Form
           name="login"
+          onFinish={handleLogin}
           layout="vertical"
-          onFinish={onFinish}
-          autoComplete="off"
           requiredMark={false}
-          initialValues={{ role: 'admin' }}
+          className="auth-form"
         >
           <Form.Item
             name="role"
-            rules={[{ required: true, message: 'Please select your role' }]}
+            initialValue="Admin"
           >
-            <Select
-              size="large"
-              placeholder="Select your role"
-              style={{ height: 48, borderRadius: 8 }}
-            >
-              <Option value="admin">Admin</Option>
-              <Option value="teacher">Teacher</Option>
-              <Option value="student">Student</Option>
+            <Select size="large" className="role-select">
+              <Option value="Admin">Admin</Option>
+              <Option value="Teacher">Teacher</Option>
+              <Option value="Student">Student</Option>
             </Select>
           </Form.Item>
 
@@ -121,7 +150,7 @@ export default function Login() {
             <Input
               placeholder="Email address"
               size="large"
-              style={{ height: 48, borderRadius: 8, fontSize: 15 }}
+              className="auth-input"
             />
           </Form.Item>
 
@@ -132,7 +161,10 @@ export default function Login() {
             <Input.Password
               placeholder="Password"
               size="large"
-              style={{ height: 48, borderRadius: 8, fontSize: 15 }}
+              className="auth-input"
+              iconRender={(visible) =>
+                visible ? <EyeOutlined /> : <EyeInvisibleOutlined />
+              }
             />
           </Form.Item>
 
@@ -143,33 +175,17 @@ export default function Login() {
               size="large"
               block
               loading={loading}
-              style={{
-                height: 48,
-                borderRadius: 8,
-                fontSize: 16,
-                fontWeight: 600,
-                background: '#5B7FFF',
-                marginTop: 8,
-              }}
+              className="auth-btn"
             >
               Sign in
             </Button>
           </Form.Item>
-        </Form>
 
-        <div style={{ textAlign: 'center' }}>
-          <Link
-            to="/forgot-password"
-            style={{
-              color: '#5B7FFF',
-              fontSize: 14,
-              fontWeight: 500,
-            }}
-          >
-            Forgot your password?
-          </Link>
-        </div>
-      </Card>
-    </AuthLayout>
+          <div className="auth-footer-link">
+            <Link to="/forgot-password">Forgot your password?</Link>
+          </div>
+        </Form>
+      </div>
+    </div>
   );
 }

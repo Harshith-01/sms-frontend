@@ -1,93 +1,49 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Form, Input, Button, Card, Result } from 'antd';
-import { CheckCircleOutlined, SyncOutlined } from '@ant-design/icons';
-import AuthLayout from '../../components/layouts/AuthLayout';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Form, Input, Button, message } from 'antd';
+import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
+import './Auth.css';
 
 export default function ResetPassword() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
-  const [resetSuccess, setResetSuccess] = useState(false);
 
-  const onFinish = (values) => {
+  const token = searchParams.get('token');
+
+  const handleResetPassword = async (values) => {
     setLoading(true);
+
+    // Backend not implemented yet
     setTimeout(() => {
+      message.success('Password reset successful! Please login with your new password.');
       setLoading(false);
-      setResetSuccess(true);
-    }, 1000);
+      navigate('/login');
+    }, 1500);
   };
 
-  if (resetSuccess) {
-    return (
-      <AuthLayout>
-        <Card
-          style={{
-            width: 450,
-            borderRadius: 16,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-          }}
-          bodyStyle={{ padding: '48px 40px' }}
-        >
-          <Result
-            icon={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
-            title="Password Reset Successful"
-            subTitle="Your password has been successfully reset. You can now sign in with your new password."
-            extra={[
-              <Button
-                type="primary"
-                size="large"
-                key="signin"
-                onClick={() => navigate('/login')}
-                style={{ height: 48, borderRadius: 8, background: '#5B7FFF' }}
-              >
-                Go to Sign in
-              </Button>,
-            ]}
-          />
-        </Card>
-      </AuthLayout>
-    );
-  }
-
   return (
-    <AuthLayout>
-      <Card
-        style={{
-          width: 450,
-          borderRadius: 16,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-        }}
-        bodyStyle={{ padding: '48px 40px' }}
-      >
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div
-            style={{
-              width: 64,
-              height: 64,
-              margin: '0 auto 24px',
-              background: '#5B7FFF',
-              borderRadius: 16,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <SyncOutlined style={{ fontSize: 32, color: '#fff' }} />
+    <div className="auth-page">
+      <div className="auth-container">
+        <div className="auth-logo">
+          <div className="logo-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+            </svg>
           </div>
-          <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0, color: '#262626' }}>
-            Reset Password
-          </h1>
-          <p style={{ fontSize: 14, color: '#8c8c8c', marginTop: 8 }}>
-            Enter your new password below
-          </p>
         </div>
 
+        <h1 className="auth-title">Reset Password</h1>
+        <p className="auth-description">
+          Enter your new password below
+        </p>
+
         <Form
-          name="resetPassword"
+          name="reset-password"
+          onFinish={handleResetPassword}
           layout="vertical"
-          onFinish={onFinish}
-          autoComplete="off"
           requiredMark={false}
+          className="auth-form"
         >
           <Form.Item
             name="password"
@@ -99,7 +55,10 @@ export default function ResetPassword() {
             <Input.Password
               placeholder="New Password"
               size="large"
-              style={{ height: 48, borderRadius: 8, fontSize: 15 }}
+              className="auth-input"
+              iconRender={(visible) =>
+                visible ? <EyeOutlined /> : <EyeInvisibleOutlined />
+              }
             />
           </Form.Item>
 
@@ -107,7 +66,7 @@ export default function ResetPassword() {
             name="confirmPassword"
             dependencies={['password']}
             rules={[
-              { required: true, message: 'Please confirm your new password' },
+              { required: true, message: 'Please confirm your password' },
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (!value || getFieldValue('password') === value) {
@@ -121,7 +80,10 @@ export default function ResetPassword() {
             <Input.Password
               placeholder="Confirm New Password"
               size="large"
-              style={{ height: 48, borderRadius: 8, fontSize: 15 }}
+              className="auth-input"
+              iconRender={(visible) =>
+                visible ? <EyeOutlined /> : <EyeInvisibleOutlined />
+              }
             />
           </Form.Item>
 
@@ -132,20 +94,13 @@ export default function ResetPassword() {
               size="large"
               block
               loading={loading}
-              style={{
-                height: 48,
-                borderRadius: 8,
-                fontSize: 16,
-                fontWeight: 600,
-                background: '#5B7FFF',
-                marginTop: 8,
-              }}
+              className="auth-btn"
             >
               Reset Password
             </Button>
           </Form.Item>
         </Form>
-      </Card>
-    </AuthLayout>
+      </div>
+    </div>
   );
 }

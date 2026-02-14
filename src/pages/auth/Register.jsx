@@ -1,104 +1,97 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Form, Input, Button, Card, Divider, message } from 'antd';
-import { GoogleOutlined, SyncOutlined } from '@ant-design/icons';
-import AuthLayout from '../../components/layouts/AuthLayout';
+import { Form, Input, Button, message } from 'antd';
+import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
+import axios from 'axios';
+import './Auth.css';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export default function Register() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  const onFinish = (values) => {
+  const handleRegister = async (values) => {
     setLoading(true);
 
-    const registerData = {
-      name: values.name,
-      email: values.email,
-      phone: values.phone,
-      password: values.password,
-      role: 'admin',
-    };
+    try {
+      const response = await axios.post(`${API_BASE_URL}/auth/create-admin`, {
+        name: values.name,
+        email: values.email,
+        password: values.password,
+        phone: null,
+        designation: null,
+        address: null,
+      });
 
-    console.log('Register Data:', registerData);
+      const { access_token, token_type } = response.data;
 
-    setTimeout(() => {
-      setLoading(false);
-      message.success('Admin account created successfully!');
+      localStorage.setItem('token', access_token);
+      localStorage.setItem('tokenType', token_type);
+      localStorage.setItem('userRole', 'ADMIN');
+
+      message.success('Admin account created successfully');
       navigate('/admin/dashboard');
-    }, 1000);
+    } catch (error) {
+      console.error('Registration error:', error);
+
+      if (error.response) {
+        const status = error.response.status;
+        const detail = error.response.data?.detail || 'Registration failed';
+
+        if (status === 409) {
+          message.error('Email already registered');
+        } else if (status === 422) {
+          message.error('Please check all fields and try again');
+        } else {
+          message.error(detail);
+        }
+      } else if (error.request) {
+        message.error('Cannot connect to server. Please check your connection.');
+      } else {
+        message.error('An error occurred. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <AuthLayout>
-      <Card
-        style={{
-          width: 450,
-          borderRadius: 16,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-        }}
-        bodyStyle={{ padding: '48px 40px' }}
-      >
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div
-            style={{
-              width: 64,
-              height: 64,
-              margin: '0 auto 24px',
-              background: '#5B7FFF',
-              borderRadius: 16,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <SyncOutlined style={{ fontSize: 32, color: '#fff' }} />
+    <div className="auth-page">
+      <div className="auth-container">
+        <div className="auth-logo">
+          <div className="logo-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+            </svg>
           </div>
-          <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0, color: '#262626' }}>
-            Create Admin Account
-          </h1>
-          <p style={{ fontSize: 14, color: '#8c8c8c', marginTop: 8 }}>
-            Already have an account?{' '}
-            <Link to="/login" style={{ color: '#5B7FFF', fontWeight: 500 }}>
-              Sign in
-            </Link>
-          </p>
         </div>
 
-        <Button
-          icon={<GoogleOutlined />}
-          size="large"
-          block
-          style={{
-            marginBottom: 20,
-            height: 48,
-            borderRadius: 8,
-            fontSize: 15,
-            fontWeight: 500,
-          }}
-        >
-          Continue with Google
-        </Button>
+        <h1 className="auth-title">Create Admin Account</h1>
+        <p className="auth-subtitle">
+          Already have an account? <Link to="/login">Sign in</Link>
+        </p>
 
-        <Divider style={{ fontSize: 13, color: '#bfbfbf' }}>or register using email</Divider>
+        <p className="auth-divider">or register using email</p>
 
         <Form
           name="register"
+          onFinish={handleRegister}
           layout="vertical"
-          onFinish={onFinish}
-          autoComplete="off"
           requiredMark={false}
+          className="auth-form"
         >
           <Form.Item
             name="name"
             rules={[
-              { required: true, message: 'Please enter your name' },
+              { required: true, message: 'Please enter your full name' },
               { min: 2, message: 'Name must be at least 2 characters' },
             ]}
           >
             <Input
               placeholder="Full Name"
               size="large"
-              style={{ height: 48, borderRadius: 8, fontSize: 15 }}
+              className="auth-input"
             />
           </Form.Item>
 
@@ -112,25 +105,7 @@ export default function Register() {
             <Input
               placeholder="Email address"
               size="large"
-              style={{ height: 48, borderRadius: 8, fontSize: 15 }}
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="phone"
-            rules={[
-              { required: true, message: 'Please enter your phone number' },
-              { 
-                pattern: /^[0-9]{10}$/, 
-                message: 'Please enter a valid 10-digit phone number' 
-              },
-            ]}
-          >
-            <Input
-              placeholder="Phone Number"
-              size="large"
-              maxLength={10}
-              style={{ height: 48, borderRadius: 8, fontSize: 15 }}
+              className="auth-input"
             />
           </Form.Item>
 
@@ -144,7 +119,10 @@ export default function Register() {
             <Input.Password
               placeholder="Password"
               size="large"
-              style={{ height: 48, borderRadius: 8, fontSize: 15 }}
+              className="auth-input"
+              iconRender={(visible) =>
+                visible ? <EyeOutlined /> : <EyeInvisibleOutlined />
+              }
             />
           </Form.Item>
 
@@ -166,7 +144,10 @@ export default function Register() {
             <Input.Password
               placeholder="Confirm Password"
               size="large"
-              style={{ height: 48, borderRadius: 8, fontSize: 15 }}
+              className="auth-input"
+              iconRender={(visible) =>
+                visible ? <EyeOutlined /> : <EyeInvisibleOutlined />
+              }
             />
           </Form.Item>
 
@@ -177,24 +158,17 @@ export default function Register() {
               size="large"
               block
               loading={loading}
-              style={{
-                height: 48,
-                borderRadius: 8,
-                fontSize: 16,
-                fontWeight: 600,
-                background: '#5B7FFF',
-                marginTop: 8,
-              }}
+              className="auth-btn"
             >
               Create Admin Account
             </Button>
           </Form.Item>
-        </Form>
 
-        <p style={{ textAlign: 'center', fontSize: 12, color: '#8c8c8c', marginTop: 16 }}>
-          By registering, you agree to our Terms of Service and Privacy Policy
-        </p>
-      </Card>
-    </AuthLayout>
+          <p className="auth-terms">
+            By registering, you agree to our Terms of Service and Privacy Policy
+          </p>
+        </Form>
+      </div>
+    </div>
   );
 }

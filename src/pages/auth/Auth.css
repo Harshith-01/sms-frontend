@@ -1,0 +1,236 @@
+/* Auth Page Background */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f5f5;
+  padding: 20px;
+}
+
+/* Auth Container (White Card) */
+.auth-container {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  padding: 48px 40px;
+  width: 100%;
+  max-width: 420px;
+}
+
+/* Logo */
+.auth-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.logo-icon {
+  width: 56px;
+  height: 56px;
+  background: #5b7cfa;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Title */
+.auth-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1a1a1a;
+  text-align: center;
+  margin: 0 0 8px 0;
+}
+
+/* Subtitle */
+.auth-subtitle {
+  font-size: 14px;
+  color: #666666;
+  text-align: center;
+  margin: 0 0 32px 0;
+}
+
+.auth-subtitle a {
+  color: #5b7cfa;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.auth-subtitle a:hover {
+  text-decoration: underline;
+}
+
+/* Description (Forgot Password page) */
+.auth-description {
+  font-size: 14px;
+  color: #666666;
+  text-align: center;
+  margin: 0 0 32px 0;
+  line-height: 1.5;
+}
+
+/* Divider Text */
+.auth-divider {
+  font-size: 13px;
+  color: #999999;
+  text-align: center;
+  margin: 0 0 24px 0;
+}
+
+/* Form */
+.auth-form {
+  margin-top: 0;
+}
+
+.auth-form .ant-form-item {
+  margin-bottom: 16px;
+}
+
+/* Role Select */
+.role-select .ant-select-selector {
+  border: 1px solid #e0e0e0 !important;
+  border-radius: 8px !important;
+  height: 48px !important;
+  padding: 8px 12px !important;
+  font-size: 15px;
+  color: #333333;
+}
+
+.role-select .ant-select-selection-item {
+  line-height: 30px !important;
+}
+
+.role-select:hover .ant-select-selector {
+  border-color: #5b7cfa !important;
+}
+
+.role-select.ant-select-focused .ant-select-selector {
+  border-color: #5b7cfa !important;
+  box-shadow: 0 0 0 2px rgba(91, 124, 250, 0.1) !important;
+}
+
+/* Inputs */
+.auth-input {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  height: 48px;
+  font-size: 15px;
+  color: #333333;
+}
+
+.auth-input::placeholder {
+  color: #999999;
+}
+
+.auth-input:hover {
+  border-color: #5b7cfa;
+}
+
+.auth-input:focus,
+.auth-input.ant-input-focused {
+  border-color: #5b7cfa;
+  box-shadow: 0 0 0 2px rgba(91, 124, 250, 0.1);
+}
+
+/* Password Input */
+.auth-input.ant-input-password {
+  padding-right: 12px;
+}
+
+.auth-input .ant-input-password-icon {
+  color: #999999;
+}
+
+.auth-input .ant-input-password-icon:hover {
+  color: #5b7cfa;
+}
+
+/* Button */
+.auth-btn {
+  background: #5b7cfa;
+  border: none;
+  border-radius: 8px;
+  height: 48px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-top: 8px;
+}
+
+.auth-btn:hover {
+  background: #4a6de8;
+}
+
+.auth-btn:active {
+  background: #3d5dd6;
+}
+
+.auth-btn:disabled {
+  background: #c2d1f7;
+}
+
+/* Footer Link */
+.auth-footer-link {
+  text-align: center;
+  margin-top: 24px;
+}
+
+.auth-footer-link a {
+  color: #5b7cfa;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.auth-footer-link a:hover {
+  text-decoration: underline;
+}
+
+/* Terms */
+.auth-terms {
+  font-size: 12px;
+  color: #999999;
+  text-align: center;
+  margin: 16px 0 0 0;
+  line-height: 1.5;
+}
+
+/* Remove Ant Design default margins */
+.auth-form .ant-form-item-label {
+  padding: 0;
+}
+
+.auth-form .ant-form-item-label > label {
+  height: auto;
+  font-size: 14px;
+  color: #666666;
+}
+
+/* Error messages */
+.auth-form .ant-form-item-explain-error {
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .auth-container {
+    padding: 32px 24px;
+  }
+
+  .auth-title {
+    font-size: 24px;
+  }
+
+  .logo-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .logo-icon svg {
+    width: 28px;
+    height: 28px;
+  }
+}

@@ -1,0 +1,425 @@
+/* Container */
+.teacher-details-container,
+.student-details-container {
+  min-height: 100vh;
+  background: #f8f9fa;
+}
+
+/* Loading */
+.details-loading,
+.teacher-details-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+/* Page Header */
+.page-header {
+  background: #ffffff;
+  padding: 28px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 0;
+}
+
+.header-left {
+  flex: 1;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.5px;
+}
+
+.page-description {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  font-weight: 400;
+}
+
+.back-btn {
+  border-radius: 8px;
+  font-weight: 500;
+  height: 40px;
+  padding: 0 20px;
+}
+
+/* Page Content */
+.page-content {
+  padding: 0;
+}
+
+/* Tabs */
+.teacher-tabs {
+  background: #ffffff;
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: none;
+  border: none;
+}
+
+.teacher-tabs .ant-tabs-nav {
+  margin: 0;
+  padding: 0 40px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.teacher-tabs .ant-tabs-tab {
+  font-size: 15px;
+  font-weight: 600;
+  padding: 16px 24px;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.teacher-tabs .ant-tabs-tab:hover {
+  color: #667eea;
+}
+
+.teacher-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #667eea;
+}
+
+.teacher-tabs .ant-tabs-ink-bar {
+  background: #667eea;
+  height: 3px;
+}
+
+.teacher-tabs .ant-tabs-content-holder {
+  padding: 0;
+}
+
+/* Tab Card */
+.tab-card {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: #ffffff;
+}
+
+.tab-card .ant-card-body {
+  padding: 36px 40px;
+}
+
+/* Card Header */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0;
+}
+
+.card-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+/* Divider */
+.tab-card .ant-divider {
+  margin: 24px 0 32px 0;
+  border-color: #e5e7eb;
+}
+
+/* Teacher Info Layout */
+.teacher-info-layout {
+  display: flex;
+  gap: 48px;
+}
+
+/* Photo Section */
+.photo-section {
+  flex-shrink: 0;
+}
+
+.teacher-avatar {
+  border-radius: 12px;
+  border: 4px solid #f3f4f6;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Info Section */
+.info-section {
+  flex: 1;
+}
+
+/* Field Group */
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.field-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+}
+
+.field-value.static {
+  color: #667eea;
+  font-weight: 700;
+}
+
+.field-input {
+  height: 44px;
+  border-radius: 8px;
+  border: 1.5px solid #d1d5db;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.field-input:hover {
+  border-color: #667eea;
+}
+
+.field-input:focus,
+.field-input.ant-input-focused {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.field-input.ant-picker {
+  width: 100%;
+}
+
+/* Select Input */
+.field-group .ant-select-selector {
+  height: 44px !important;
+  border-radius: 8px !important;
+  border: 1.5px solid #d1d5db !important;
+  padding: 6px 12px !important;
+}
+
+.field-group .ant-select-selection-item {
+  line-height: 30px !important;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.field-group .ant-select:hover .ant-select-selector {
+  border-color: #667eea !important;
+}
+
+.field-group .ant-select-focused .ant-select-selector {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+}
+
+/* TextArea */
+.field-group textarea.field-input {
+  min-height: 80px;
+  padding: 12px;
+  line-height: 1.6;
+}
+
+/* Badges */
+.badge {
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.badge-blue {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-purple {
+  background: #e9d5ff;
+  color: #6b21a8;
+}
+
+.badge-green {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.badge-orange {
+  background: #fed7aa;
+  color: #c2410c;
+}
+
+.badge-success {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.badge-error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Buttons */
+.card-header .ant-btn-primary {
+  background: #667eea;
+  border-color: #667eea;
+  border-radius: 8px;
+  height: 40px;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(102, 126, 234, 0.2);
+}
+
+.card-header .ant-btn-primary:hover {
+  background: #5568d3;
+  border-color: #5568d3;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
+.card-header .ant-btn-default {
+  border-radius: 8px;
+  height: 40px;
+  font-weight: 500;
+  border: 1.5px solid #d1d5db;
+}
+
+.card-header .ant-btn-default:hover {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+/* Empty State */
+.empty-state {
+  padding: 60px 20px;
+  text-align: center;
+}
+
+/* Form Disabled State */
+.tab-card form[disabled] .field-input,
+.tab-card form[disabled] .ant-select-selector,
+.tab-card form[disabled] .ant-picker {
+  background: transparent !important;
+  border: none !important;
+  cursor: default !important;
+  padding: 0 !important;
+  height: auto !important;
+}
+
+.tab-card form[disabled] .ant-select-arrow,
+.tab-card form[disabled] .ant-picker-suffix {
+  display: none;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .teacher-info-layout {
+    gap: 32px;
+  }
+
+  .teacher-avatar {
+    width: 150px !important;
+    height: 150px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    padding: 20px 24px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .back-btn {
+    align-self: flex-end;
+  }
+
+  .page-title {
+    font-size: 24px;
+  }
+
+  .teacher-tabs .ant-tabs-nav {
+    padding: 0 20px;
+  }
+
+  .teacher-tabs .ant-tabs-tab {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+
+  .tab-card .ant-card-body {
+    padding: 24px;
+  }
+
+  .teacher-info-layout {
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .photo-section {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .info-section {
+    width: 100%;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .card-header .ant-space {
+    width: 100%;
+  }
+
+  .card-header .ant-space .ant-btn {
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-title {
+    font-size: 20px;
+  }
+
+  .teacher-avatar {
+    width: 120px !important;
+    height: 120px !important;
+  }
+
+  .field-value {
+    font-size: 15px;
+  }
+
+  .field-input {
+    height: 40px;
+    font-size: 14px;
+  }
+
+  .field-group .ant-select-selector {
+    height: 40px !important;
+  }
+
+  .teacher-tabs .ant-tabs-tab {
+    padding: 12px 12px;
+    font-size: 13px;
+  }
+}
+/* Form.css - Same as Details.css */

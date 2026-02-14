@@ -1,0 +1,96 @@
+.teacher-dashboard {
+  background: var(--bg-secondary);
+  min-height: 100vh;
+}
+
+.dashboard-welcome {
+  margin-bottom: 24px;
+}
+
+.dashboard-welcome-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+  letter-spacing: -0.5px;
+}
+
+.dashboard-welcome-subtitle {
+  font-size: 14px;
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+.dashboard-stats {
+  margin-bottom: 24px;
+}
+
+.classes-card,
+.submissions-card {
+  border-radius: 12px;
+}
+
+.class-list-item,
+.submission-item {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.class-list-item:last-child,
+.submission-item:last-child {
+  border-bottom: none;
+}
+
+.class-list-item:hover,
+.submission-item:hover {
+  background: var(--bg-hover);
+}
+
+.class-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
+}
+
+.class-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.class-subject {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.class-details {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  display: flex;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.student-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.assignment-name {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.submission-meta {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
