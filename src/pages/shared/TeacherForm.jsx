@@ -19,7 +19,7 @@ import {
   Radio,
 } from 'antd';
 import { EditOutlined, SaveOutlined, ArrowLeftOutlined } from '@ant-design/icons';
-import { getTeacherById, createTeacher, updateTeacher } from '../../services/api';
+import { getTeacherById, createTeacher, updateTeacher } from '../../services/teacherService';
 import dayjs from 'dayjs';
 import './Form.css';
 

@@ -1,5 +1,6 @@
 .student-dashboard {
-  background: var(--bg-secondary);
+  padding: 24px 40px;
+  background: #f8f9fa;
   min-height: 100vh;
 }
 
@@ -10,14 +11,13 @@
 .dashboard-welcome-title {
   font-size: 28px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #1f2937;
   margin: 0 0 4px 0;
-  letter-spacing: -0.5px;
 }
 
 .dashboard-welcome-subtitle {
   font-size: 14px;
-  color: var(--text-tertiary);
+  color: #6b7280;
   margin: 0;
 }
 
@@ -25,95 +25,103 @@
   margin-bottom: 24px;
 }
 
-.upcoming-classes-card {
+.stat-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-icon {
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 48px;
+  opacity: 0.1;
+}
+
+.content-card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   border-radius: 12px;
 }
 
-.class-list-item {
-  padding: 16px 24px;
-  border-bottom: 1px solid var(--border-color);
-  transition: all 0.3s ease;
+.class-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.class-list-item:last-child {
+.class-item:last-child {
   border-bottom: none;
-}
-
-.class-list-item:hover {
-  background: var(--bg-hover);
 }
 
 .class-icon {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 20px;
+  font-size: 24px;
+}
+
+.class-details {
+  flex: 1;
 }
 
 .class-subject {
   font-size: 16px;
   font-weight: 600;
-  color: var(--text-primary);
-}
-
-.class-teacher {
-  font-size: 13px;
-  color: var(--text-secondary);
+  color: #1f2937;
   margin-bottom: 4px;
 }
 
-.class-details {
-  font-size: 12px;
-  color: var(--text-tertiary);
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.class-teacher {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 4px;
 }
 
-.assignments-section {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+.class-meta {
+  font-size: 13px;
+  color: #9ca3af;
 }
 
-.assignment-card {
-  border-radius: 12px;
-  transition: all 0.3s ease;
-}
-
-.assignment-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-}
-
-.assignment-content {
+.assignment-item {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.assignment-item:last-child {
+  border-bottom: none;
 }
 
 .assignment-title {
   font-size: 15px;
   font-weight: 600;
-  color: var(--text-primary);
-  margin: 0 0 6px 0;
+  color: #1f2937;
+  margin-bottom: 4px;
 }
 
 .assignment-subject {
   font-size: 13px;
-  color: var(--text-secondary);
-  margin: 0 0 8px 0;
+  color: #6b7280;
+  margin-bottom: 6px;
 }
 
 .assignment-due {
-  font-size: 12px;
-  color: var(--text-tertiary);
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+@media (max-width: 768px) {
+  .student-dashboard {
+    padding: 24px 20px;
+  }
 }

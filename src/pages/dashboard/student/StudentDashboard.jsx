@@ -1,40 +1,84 @@
-import { Row, Col, Card, List, Avatar, Tag, Progress } from 'antd';
-import {
-  BookOutlined,
-  TrophyOutlined,
-  CalendarOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-} from '@ant-design/icons';
-import StatCard from '../../../components/common/StatCard';
-import SectionHeader from '../../../components/common/SectionHeader';
+import { useState, useEffect } from 'react';
+import { Card, Row, Col, Statistic, Table, Tag, Progress, message } from 'antd';
+import { BookOutlined, FileTextOutlined, TrophyOutlined, DollarOutlined, ClockCircleOutlined, CalendarOutlined } from '@ant-design/icons';
+import { getStudentAssignmentHistory, getStudentExamHistory } from '../../../services/assessmentService';
+import { getStudentFeeTerms } from '../../../services/feeService';
+import dayjs from 'dayjs';
 import './StudentDashboard.css';
 
 export default function StudentDashboard() {
+  const [stats, setStats] = useState({
+    totalClasses: 8,
+    attendance: 92,
+    totalAssignments: 0,
+    completedAssignments: 0,
+    upcomingExams: 0,
+    feeBalance: 0,
+  });
+  const [recentAssignments, setRecentAssignments] = useState([]);
+  const [upcomingExams, setUpcomingExams] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const studentId = localStorage.getItem('userId');
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      // Fetch assignments
+      const assignmentsRes = await getStudentAssignmentHistory(studentId, 1, 5);
+      setRecentAssignments(assignmentsRes.data.data || []);
+      setStats(prev => ({ 
+        ...prev, 
+        totalAssignments: assignmentsRes.data.total || 0,
+        completedAssignments: assignmentsRes.data.data?.filter(a => a.status === 'Submitted').length || 0
+      }));
+
+      // Fetch exams
+      const examsRes = await getStudentExamHistory(studentId, 1, 5);
+      setUpcomingExams(examsRes.data.data || []);
+      setStats(prev => ({ ...prev, upcomingExams: examsRes.data.total || 0 }));
+
+      // Fetch fees
+      const feesRes = await getStudentFeeTerms({ student_id: studentId });
+      const totalBalance = feesRes.data.data?.reduce((sum, fee) => sum + (fee.balance_amount || 0), 0) || 0;
+      setStats(prev => ({ ...prev, feeBalance: totalBalance }));
+    } catch (error) {
+      console.error('Failed to fetch dashboard data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const statsData = [
     {
       title: 'Total Classes',
-      value: '8',
+      value: stats.totalClasses,
       icon: <BookOutlined />,
       color: '#667eea',
     },
     {
       title: 'Attendance',
-      value: '92%',
+      value: `${stats.attendance}%`,
       icon: <CalendarOutlined />,
       color: '#52c41a',
     },
     {
       title: 'Assignments',
-      value: '12',
+      value: stats.totalAssignments,
+      suffix: ` (${stats.completedAssignments} done)`,
       icon: <ClockCircleOutlined />,
       color: '#faad14',
     },
     {
-      title: 'Grade Average',
-      value: 'A',
-      icon: <TrophyOutlined />,
-      color: '#13c2c2',
+      title: 'Fee Balance',
+      value: stats.feeBalance,
+      prefix: '₹',
+      icon: <DollarOutlined />,
+      color: '#ef4444',
     },
   ];
 
@@ -62,38 +106,13 @@ export default function StudentDashboard() {
     },
   ];
 
-  const assignments = [
-    {
-      id: 1,
-      title: 'Math Assignment Chapter 5',
-      subject: 'Mathematics',
-      dueDate: 'Feb 5, 2026',
-      status: 'pending',
-    },
-    {
-      id: 2,
-      title: 'Science Project',
-      subject: 'Science',
-      dueDate: 'Feb 8, 2026',
-      status: 'in-progress',
-    },
-    {
-      id: 3,
-      title: 'English Essay',
-      subject: 'English',
-      dueDate: 'Feb 2, 2026',
-      status: 'completed',
-    },
+  const assignmentColumns = [
+    { title: 'Assignment', dataIndex: 'title', key: 'title', render: (text) => <strong>{text}</strong> },
+    { title: 'Subject', dataIndex: 'subject_name', key: 'subject_name' },
+    { title: 'Due Date', dataIndex: 'due_date', key: 'due_date', render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
+    { title: 'Status', dataIndex: 'status', key: 'status', render: (text) => <Tag color={text === 'Submitted' ? 'green' : 'orange'}>{text || 'Pending'}</Tag> },
+    { title: 'Marks', dataIndex: 'marks_obtained', key: 'marks_obtained', render: (text, record) => text ? `${text}/${record.total_marks}` : '-' },
   ];
-
-  const getStatusTag = (status) => {
-    const config = {
-      pending: { color: 'orange', text: 'Pending' },
-      'in-progress': { color: 'blue', text: 'In Progress' },
-      completed: { color: 'green', text: 'Completed' },
-    };
-    return config[status] || config.pending;
-  };
 
   return (
     <div className="student-dashboard">
@@ -107,67 +126,75 @@ export default function StudentDashboard() {
       <Row gutter={[16, 16]} className="dashboard-stats">
         {statsData.map((stat, index) => (
           <Col xs={24} sm={12} lg={6} key={index}>
-            <StatCard {...stat} />
+            <Card bordered={false} className="stat-card">
+              <Statistic
+                title={stat.title}
+                value={stat.value}
+                prefix={stat.prefix}
+                suffix={stat.suffix}
+                valueStyle={{ color: stat.color }}
+              />
+              <div className="stat-icon" style={{ color: stat.color }}>
+                {stat.icon}
+              </div>
+            </Card>
           </Col>
         ))}
       </Row>
 
       {/* Main Content */}
-      <Row gutter={[16, 16]}>
-        {/* Upcoming Classes */}
+      <Row gutter={[16, 16]} style={{ marginTop: 24 }}>
+        {/* Today's Classes */}
         <Col xs={24} lg={14}>
-          <SectionHeader title="Today's Classes" />
-          <Card bordered={false} className="upcoming-classes-card">
-            <List
-              itemLayout="horizontal"
-              dataSource={upcomingClasses}
-              renderItem={(item) => (
-                <List.Item className="class-list-item">
-                  <List.Item.Meta
-                    avatar={
-                      <div className="class-icon">
-                        <BookOutlined />
-                      </div>
-                    }
-                    title={<span className="class-subject">{item.subject}</span>}
-                    description={
-                      <div>
-                        <div className="class-teacher">{item.teacher}</div>
-                        <div className="class-details">
-                          <ClockCircleOutlined /> {item.time} • {item.room}
-                        </div>
-                      </div>
-                    }
-                  />
-                </List.Item>
-              )}
-            />
+          <Card title="Today's Classes" bordered={false} className="content-card">
+            {upcomingClasses.map((item) => (
+              <div key={item.id} className="class-item">
+                <div className="class-icon">
+                  <BookOutlined />
+                </div>
+                <div className="class-details">
+                  <div className="class-subject">{item.subject}</div>
+                  <div className="class-teacher">{item.teacher}</div>
+                  <div className="class-meta">
+                    <ClockCircleOutlined /> {item.time} • {item.room}
+                  </div>
+                </div>
+              </div>
+            ))}
           </Card>
         </Col>
 
-        {/* Assignments */}
+        {/* Recent Assignments */}
         <Col xs={24} lg={10}>
-          <SectionHeader title="Recent Assignments" />
-          <div className="assignments-section">
-            {assignments.map((assignment) => (
-              <Card key={assignment.id} bordered={false} className="assignment-card">
-                <div className="assignment-content">
-                  <div>
-                    <h4 className="assignment-title">{assignment.title}</h4>
-                    <p className="assignment-subject">{assignment.subject}</p>
-                    <div className="assignment-due">
-                      <CalendarOutlined /> Due: {assignment.dueDate}
-                    </div>
+          <Card title="Upcoming Assignments" bordered={false} className="content-card">
+            {recentAssignments.slice(0, 3).map((assignment) => (
+              <div key={assignment.id} className="assignment-item">
+                <div>
+                  <div className="assignment-title">{assignment.title}</div>
+                  <div className="assignment-subject">{assignment.subject_name}</div>
+                  <div className="assignment-due">
+                    <CalendarOutlined /> Due: {dayjs(assignment.due_date).format('DD MMM, YYYY')}
                   </div>
-                  <Tag color={getStatusTag(assignment.status).color}>
-                    {getStatusTag(assignment.status).text}
-                  </Tag>
                 </div>
-              </Card>
+                <Tag color={assignment.status === 'Submitted' ? 'green' : 'orange'}>
+                  {assignment.status || 'Pending'}
+                </Tag>
+              </div>
             ))}
-          </div>
+          </Card>
         </Col>
       </Row>
+
+      {/* Recent Assignments Table */}
+      <Card title="Recent Assignments" style={{ marginTop: 24 }} bordered={false}>
+        <Table
+          columns={assignmentColumns}
+          dataSource={recentAssignments}
+          rowKey="id"
+          loading={loading}
+          pagination={false}
+        />
+      </Card>
     </div>
   );
 }

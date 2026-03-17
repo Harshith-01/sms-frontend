@@ -25,7 +25,7 @@ import {
   CloudUploadOutlined,
   DownloadOutlined,
 } from '@ant-design/icons';
-import { getStudents, deleteStudent, bulkUploadStudents } from '../../../../../services/api';
+import { getStudents, deleteStudent, bulkUploadStudents } from '../../../../../services/studentService';
 import './Student.css';
 
 const { Option } = Select;

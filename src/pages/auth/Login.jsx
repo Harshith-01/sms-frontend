@@ -1,12 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Form, Input, Button, message, Select } from 'antd';
+import { Form, Input, Button, message } from 'antd';
 import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
-import axios from 'axios';
+import { login } from '../../services/authService';
 import './Auth.css';
-
-const { Option } = Select;
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -34,23 +31,43 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // ⚠️ DEVELOPMENT ONLY - REMOVE BEFORE PRODUCTION ⚠️
-      if (values.email === 'admin@test.com' && values.password === 'Admin@123') {
-        const testToken = 'test_token_admin';
-        localStorage.setItem('token', testToken);
+      // ⚠️ TESTING ONLY - REMOVE BEFORE PRODUCTION ⚠️
+      if (values.email === 'admin@test.com' && values.password === 'admin123') {
+        localStorage.setItem('token', 'dummy_token_admin');
         localStorage.setItem('userRole', 'ADMIN');
-        message.success('Login successful (Test Mode)');
-        navigate('/admin/dashboard');
+        localStorage.setItem('userId', 'admin_001');
+        localStorage.setItem('userEmail', values.email);
+        message.success('Login successful (Admin - Test Mode)');
+        navigate('/admin/dashboard', { replace: true });
         setLoading(false);
         return;
       }
-      // ⚠️ END DEVELOPMENT ONLY CODE ⚠️
 
-      const response = await axios.post(`${API_BASE_URL}/auth/login`, {
-        email: values.email,
-        password: values.password,
-      });
+      if (values.email === 'teacher@test.com' && values.password === 'teacher123') {
+        localStorage.setItem('token', 'dummy_token_teacher');
+        localStorage.setItem('userRole', 'TEACHER');
+        localStorage.setItem('userId', 'T2901');
+        localStorage.setItem('userEmail', values.email);
+        message.success('Login successful (Teacher - Test Mode)');
+        navigate('/teacher/dashboard', { replace: true });
+        setLoading(false);
+        return;
+      }
 
+      if (values.email === 'student@test.com' && values.password === 'student123') {
+        localStorage.setItem('token', 'dummy_token_student');
+        localStorage.setItem('userRole', 'STUDENT');
+        localStorage.setItem('userId', 'S2024001');
+        localStorage.setItem('userEmail', values.email);
+        message.success('Login successful (Student - Test Mode)');
+        navigate('/student/dashboard', { replace: true });
+        setLoading(false);
+        return;
+      }
+      // ⚠️ END TESTING ONLY CODE ⚠️
+
+      // Real backend login using authService
+      const response = await login(values.email, values.password);
       const { access_token, token_type } = response.data;
 
       localStorage.setItem('token', access_token);
@@ -68,19 +85,21 @@ export default function Login() {
 
         switch (role) {
           case 'ADMIN':
-            navigate('/admin/dashboard');
+            navigate('/admin/dashboard', { replace: true });
             break;
           case 'TEACHER':
-            navigate('/teacher/dashboard');
+            navigate('/teacher/dashboard', { replace: true });
             break;
           case 'STUDENT':
-            navigate('/student/dashboard');
+            navigate('/student/dashboard', { replace: true });
             break;
           default:
-            navigate('/admin/dashboard');
+            message.warning('Unknown role, redirecting to admin dashboard');
+            navigate('/admin/dashboard', { replace: true });
         }
       } else {
-        message.error('Invalid token received');
+        message.error('Invalid token: role not found');
+        localStorage.clear();
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -122,6 +141,23 @@ export default function Login() {
           Don't have an account? <Link to="/register">Register as Admin</Link>
         </p>
 
+        {/* ⚠️ TESTING INFO - REMOVE BEFORE PRODUCTION ⚠️ */}
+        <div style={{ 
+          background: '#fff3cd', 
+          border: '1px solid #ffc107', 
+          borderRadius: '8px', 
+          padding: '12px', 
+          marginBottom: '20px',
+          fontSize: '13px',
+          color: '#856404'
+        }}>
+          <strong>Test Credentials:</strong><br />
+          Admin: admin@test.com / admin123<br />
+          Teacher: teacher@test.com / teacher123<br />
+          Student: student@test.com / student123
+        </div>
+        {/* ⚠️ END TESTING INFO ⚠️ */}
+
         <Form
           name="login"
           onFinish={handleLogin}
@@ -130,28 +166,13 @@ export default function Login() {
           className="auth-form"
         >
           <Form.Item
-            name="role"
-            initialValue="Admin"
-          >
-            <Select size="large" className="role-select">
-              <Option value="Admin">Admin</Option>
-              <Option value="Teacher">Teacher</Option>
-              <Option value="Student">Student</Option>
-            </Select>
-          </Form.Item>
-
-          <Form.Item
             name="email"
             rules={[
               { required: true, message: 'Please enter your email' },
               { type: 'email', message: 'Please enter a valid email' },
             ]}
           >
-            <Input
-              placeholder="Email address"
-              size="large"
-              className="auth-input"
-            />
+            <Input placeholder="Email address" size="large" className="auth-input" />
           </Form.Item>
 
           <Form.Item
@@ -162,21 +183,12 @@ export default function Login() {
               placeholder="Password"
               size="large"
               className="auth-input"
-              iconRender={(visible) =>
-                visible ? <EyeOutlined /> : <EyeInvisibleOutlined />
-              }
+              iconRender={(visible) => visible ? <EyeOutlined /> : <EyeInvisibleOutlined />}
             />
           </Form.Item>
 
           <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              size="large"
-              block
-              loading={loading}
-              className="auth-btn"
-            >
+            <Button type="primary" htmlType="submit" size="large" block loading={loading} className="auth-btn">
               Sign in
             </Button>
           </Form.Item>

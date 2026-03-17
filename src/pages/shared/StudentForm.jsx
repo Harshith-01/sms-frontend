@@ -17,7 +17,7 @@ import {
   Divider,
 } from 'antd';
 import { SaveOutlined, ArrowLeftOutlined } from '@ant-design/icons';
-import { getStudentById, createStudent, updateStudentBasic, updateStudentContact, updateStudentParent, updateStudentAcademic, updateStudentAdmission } from '../../services/api';
+import { getStudentById, createStudent, updateStudentBasic, updateStudentContact, updateStudentParent, updateStudentAcademic, updateStudentAdmission } from '../../services/studentService';
 import dayjs from 'dayjs';
 import './Form.css';
 

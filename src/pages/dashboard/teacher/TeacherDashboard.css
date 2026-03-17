@@ -1,5 +1,6 @@
 .teacher-dashboard {
-  background: var(--bg-secondary);
+  padding: 24px 40px;
+  background: #f8f9fa;
   min-height: 100vh;
 }
 
@@ -10,14 +11,13 @@
 .dashboard-welcome-title {
   font-size: 28px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #1f2937;
   margin: 0 0 4px 0;
-  letter-spacing: -0.5px;
 }
 
 .dashboard-welcome-subtitle {
   font-size: 14px;
-  color: var(--text-tertiary);
+  color: #6b7280;
   margin: 0;
 }
 
@@ -25,72 +25,105 @@
   margin-bottom: 24px;
 }
 
-.classes-card,
-.submissions-card {
+.stat-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-icon {
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 48px;
+  opacity: 0.1;
+}
+
+.content-card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   border-radius: 12px;
 }
 
-.class-list-item,
-.submission-item {
-  padding: 16px 24px;
-  border-bottom: 1px solid var(--border-color);
-  transition: all 0.3s ease;
+.class-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.class-list-item:last-child,
-.submission-item:last-child {
+.class-item:last-child {
   border-bottom: none;
-}
-
-.class-list-item:hover,
-.submission-item:hover {
-  background: var(--bg-hover);
 }
 
 .class-icon {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 20px;
-}
-
-.class-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.class-subject {
-  font-size: 14px;
-  color: var(--text-secondary);
+  font-size: 24px;
+  flex-shrink: 0;
 }
 
 .class-details {
-  font-size: 12px;
-  color: var(--text-tertiary);
-  display: flex;
-  gap: 16px;
-  margin-top: 4px;
+  flex: 1;
 }
 
-.student-name {
-  font-size: 14px;
+.class-name {
+  font-size: 16px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #1f2937;
+  margin-bottom: 6px;
 }
 
-.assignment-name {
+.class-meta {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: #9ca3af;
+}
+
+.quick-action-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.quick-action-item:last-child {
+  border-bottom: none;
+}
+
+.quick-action-item:hover {
+  background: #f9fafb;
+  padding-left: 8px;
+}
+
+.action-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2937;
   margin-bottom: 4px;
 }
 
-.submission-meta {
-  font-size: 12px;
-  color: var(--text-tertiary);
+.action-subtitle {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+@media (max-width: 768px) {
+  .teacher-dashboard {
+    padding: 24px 20px;
+  }
+
+  .class-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }

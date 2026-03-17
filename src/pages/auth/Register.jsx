@@ -2,10 +2,8 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Form, Input, Button, message } from 'antd';
 import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
-import axios from 'axios';
+import { register } from '../../services/authService';
 import './Auth.css';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -15,7 +13,8 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/create-admin`, {
+      // Using authService for registration
+      const response = await register({
         name: values.name,
         email: values.email,
         password: values.password,
@@ -29,9 +28,11 @@ export default function Register() {
       localStorage.setItem('token', access_token);
       localStorage.setItem('tokenType', token_type);
       localStorage.setItem('userRole', 'ADMIN');
+      localStorage.setItem('userName', values.name);
+      localStorage.setItem('userEmail', values.email);
 
       message.success('Admin account created successfully');
-      navigate('/admin/dashboard');
+      navigate('/admin/dashboard', { replace: true });
     } catch (error) {
       console.error('Registration error:', error);
 
@@ -88,11 +89,7 @@ export default function Register() {
               { min: 2, message: 'Name must be at least 2 characters' },
             ]}
           >
-            <Input
-              placeholder="Full Name"
-              size="large"
-              className="auth-input"
-            />
+            <Input placeholder="Full Name" size="large" className="auth-input" />
           </Form.Item>
 
           <Form.Item
@@ -102,11 +99,7 @@ export default function Register() {
               { type: 'email', message: 'Please enter a valid email' },
             ]}
           >
-            <Input
-              placeholder="Email address"
-              size="large"
-              className="auth-input"
-            />
+            <Input placeholder="Email address" size="large" className="auth-input" />
           </Form.Item>
 
           <Form.Item
@@ -120,9 +113,7 @@ export default function Register() {
               placeholder="Password"
               size="large"
               className="auth-input"
-              iconRender={(visible) =>
-                visible ? <EyeOutlined /> : <EyeInvisibleOutlined />
-              }
+              iconRender={(visible) => visible ? <EyeOutlined /> : <EyeInvisibleOutlined />}
             />
           </Form.Item>
 
@@ -145,21 +136,12 @@ export default function Register() {
               placeholder="Confirm Password"
               size="large"
               className="auth-input"
-              iconRender={(visible) =>
-                visible ? <EyeOutlined /> : <EyeInvisibleOutlined />
-              }
+              iconRender={(visible) => visible ? <EyeOutlined /> : <EyeInvisibleOutlined />}
             />
           </Form.Item>
 
           <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              size="large"
-              block
-              loading={loading}
-              className="auth-btn"
-            >
+            <Button type="primary" htmlType="submit" size="large" block loading={loading} className="auth-btn">
               Create Admin Account
             </Button>
           </Form.Item>

@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { Row, Col, Card, List, Avatar, Tag, Button } from 'antd';
 import {
   UserOutlined,
@@ -14,6 +15,8 @@ import SectionHeader from '../../../components/common/SectionHeader';
 import './AdminDashboard.css';
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
+
   const statsData = [
     {
       title: 'Total Students',
@@ -54,16 +57,19 @@ export default function AdminDashboard() {
       title: 'Add Student',
       icon: <PlusOutlined />,
       color: '#667eea',
+      onClick: () => navigate('/admin/onboarding/students/add'),
     },
     {
       title: 'Add Teacher',
       icon: <PlusOutlined />,
       color: '#52c41a',
+      onClick: () => navigate('/admin/onboarding/teachers/add'),
     },
     {
       title: 'Create Class',
       icon: <PlusOutlined />,
       color: '#faad14',
+      onClick: () => console.log('Create Class - Not implemented yet'),
     },
   ];
 
@@ -184,7 +190,7 @@ export default function AdminDashboard() {
             <Col xs={24} sm={12} lg={8} key={index}>
               <QuickActionCard
                 {...action}
-                onClick={() => console.log(`${action.title} clicked`)}
+                onClick={action.onClick}
               />
             </Col>
           ))}
@@ -198,7 +204,11 @@ export default function AdminDashboard() {
           <SectionHeader
             title="Recent Activity"
             action={
-              <Button type="link" style={{ padding: 0, color: '#667eea' }}>
+              <Button 
+                type="link" 
+                style={{ padding: 0, color: '#667eea' }}
+                onClick={() => navigate('/admin/onboarding/students')}
+              >
                 View All
               </Button>
             }

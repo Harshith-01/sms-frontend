@@ -94,7 +94,7 @@ export default function Sidebar({ collapsed, setCollapsed, role = 'admin' }) {
         ) : (
           <div className="logo-full">
             <span>🎓</span>
-            <span className="logo-text">Schoooli</span>
+            <span className="logo-text">SchooolMS</span>
           </div>
         )}
       </div>
