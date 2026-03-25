@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Layout } from 'antd';
 import { Outlet, useLocation } from 'react-router-dom';
-import Navbar from '../../components/topbar/Topbar';
+import Navbar from '../../components/topbar/TopBar';
 import Sidebar from '../../components/sidebar/Sidebar';
 import './DashboardLayout.css';
 
