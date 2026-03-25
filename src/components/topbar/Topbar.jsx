@@ -9,7 +9,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { getStudentProfile, getTeacherProfile } from '../../services/profileService';
-import './TopBar.css';
+import './Topbar.css';
 
 export default function TopBar() {
   const navigate = useNavigate();
