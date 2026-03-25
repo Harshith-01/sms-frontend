@@ -45,6 +45,33 @@ import TimetableEntries from '../pages/dashboard/admin/attendance/TimetableEntri
 import AttendanceSettings from '../pages/dashboard/admin/attendance/AttendanceSettings';
 import AttendanceReports from '../pages/dashboard/admin/attendance/AttendanceReports';
 
+// Parent Management Pages - Admin
+import ParentsList from '../pages/dashboard/admin/parents/ParentsList';
+import AddParent from '../pages/dashboard/admin/parents/AddParent';
+import ParentDetails from '../pages/dashboard/admin/parents/ParentDetails';
+
+// Staff Management Pages - Admin
+import StaffList from '../pages/dashboard/admin/staff/StaffList';
+import AddStaff from '../pages/dashboard/admin/staff/AddStaff';
+import StaffDetails from '../pages/dashboard/admin/staff/StaffDetails';
+import BulkUploadStaff from '../pages/dashboard/admin/staff/BulkUploadStaff';
+
+// Parent Dashboard Pages
+import ParentDashboard from '../pages/dashboard/parent/ParentDashboard';
+import MyProfile from '../pages/dashboard/parent/MyProfile';
+import MyChildren from '../pages/dashboard/parent/MyChildren';
+import ChildAttendance from '../pages/dashboard/parent/ChildAttendance';
+import ChildReportCards from '../pages/dashboard/parent/ChildReportCards';
+import ChildExamSchedule from '../pages/dashboard/parent/ChildExamSchedule';
+import ChildTimetable from '../pages/dashboard/parent/ChildTimetable';
+import RequestMeeting from '../pages/dashboard/parent/RequestMeeting';
+import MyMeetings from '../pages/dashboard/parent/MyMeetings';
+
+// Staff Dashboard Pages
+import StaffDashboard from '../pages/dashboard/staff/StaffDashboard';
+import StaffMyProfile from '../pages/dashboard/staff/MyProfile';
+import SchoolTimetable from '../pages/dashboard/staff/SchoolTimetable';
+
 // Attendance Management Pages - Teacher
 import MarkAttendance from '../pages/dashboard/teacher/attendance/MarkAttendance';
 import AttendanceSessions from '../pages/dashboard/teacher/attendance/AttendanceSessions';
@@ -82,6 +109,10 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
         return <Navigate to="/teacher/dashboard" replace />;
       case 'STUDENT':
         return <Navigate to="/student/dashboard" replace />;
+      case 'PARENT':
+        return <Navigate to="/parent/dashboard" replace />;
+      case 'NON_TEACHING_STAFF':
+        return <Navigate to="/staff/dashboard" replace />;
       default:
         return <Navigate to="/login" replace />;
     }
@@ -103,7 +134,7 @@ export default function AppRoutes() {
         path="/admin"
         element={
           <ProtectedRoute allowedRoles={['ADMIN']}>
-            <DashboardLayout userRole="admin" />
+            <DashboardLayout />
           </ProtectedRoute>
         }
       >
@@ -121,6 +152,17 @@ export default function AppRoutes() {
         <Route path="onboarding/students/add" element={<StudentForm mode="add" />} />
         <Route path="onboarding/students/:id" element={<StudentForm mode="view" />} />
         <Route path="onboarding/students/:id/edit" element={<StudentForm mode="edit" />} />
+
+        {/* Parents */}
+        <Route path="parents" element={<ParentsList />} />
+        <Route path="parents/add" element={<AddParent />} />
+        <Route path="parents/:id" element={<ParentDetails />} />
+
+        {/* Staff */}
+        <Route path="staff" element={<StaffList />} />
+        <Route path="staff/add" element={<AddStaff />} />
+        <Route path="staff/bulk-upload" element={<BulkUploadStaff />} />
+        <Route path="staff/:id" element={<StaffDetails />} />
 
         {/* Academic Management */}
         <Route path="academic/academic-years" element={<AcademicYears />} />
@@ -158,7 +200,7 @@ export default function AppRoutes() {
         path="/teacher"
         element={
           <ProtectedRoute allowedRoles={['TEACHER']}>
-            <DashboardLayout userRole="teacher" />
+            <DashboardLayout />
           </ProtectedRoute>
         }
       >
@@ -180,7 +222,7 @@ export default function AppRoutes() {
         path="/student"
         element={
           <ProtectedRoute allowedRoles={['STUDENT']}>
-            <DashboardLayout userRole="student" />
+            <DashboardLayout />
           </ProtectedRoute>
         }
       >
@@ -195,6 +237,42 @@ export default function AppRoutes() {
         {/* Attendance */}
         <Route path="attendance" element={<MyAttendance />} />
         <Route path="attendance/history" element={<AttendanceHistory />} />
+      </Route>
+
+      {/* PARENT ROUTES */}
+      <Route
+        path="/parent"
+        element={
+          <ProtectedRoute allowedRoles={['PARENT']}>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<ParentDashboard />} />
+        <Route path="profile" element={<MyProfile />} />
+        <Route path="children" element={<MyChildren />} />
+        <Route path="children/:studentId/attendance" element={<ChildAttendance />} />
+        <Route path="children/:studentId/report-cards" element={<ChildReportCards />} />
+        <Route path="children/:studentId/exams" element={<ChildExamSchedule />} />
+        <Route path="children/:studentId/timetable" element={<ChildTimetable />} />
+        <Route path="meetings/request" element={<RequestMeeting />} />
+        <Route path="meetings" element={<MyMeetings />} />
+      </Route>
+
+      {/* STAFF ROUTES */}
+      <Route
+        path="/staff"
+        element={
+          <ProtectedRoute allowedRoles={['NON_TEACHING_STAFF']}>
+            <DashboardLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<StaffDashboard />} />
+        <Route path="profile" element={<StaffMyProfile />} />
+        <Route path="timetable" element={<SchoolTimetable />} />
       </Route>
 
       {/* Catch all */}

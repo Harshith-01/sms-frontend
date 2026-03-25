@@ -31,42 +31,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // ⚠️ TESTING ONLY - REMOVE BEFORE PRODUCTION ⚠️
-      if (values.email === 'admin@test.com' && values.password === 'admin123') {
-        localStorage.setItem('token', 'dummy_token_admin');
-        localStorage.setItem('userRole', 'ADMIN');
-        localStorage.setItem('userId', 'admin_001');
-        localStorage.setItem('userEmail', values.email);
-        message.success('Login successful (Admin - Test Mode)');
-        navigate('/admin/dashboard', { replace: true });
-        setLoading(false);
-        return;
-      }
-
-      if (values.email === 'teacher@test.com' && values.password === 'teacher123') {
-        localStorage.setItem('token', 'dummy_token_teacher');
-        localStorage.setItem('userRole', 'TEACHER');
-        localStorage.setItem('userId', 'T2901');
-        localStorage.setItem('userEmail', values.email);
-        message.success('Login successful (Teacher - Test Mode)');
-        navigate('/teacher/dashboard', { replace: true });
-        setLoading(false);
-        return;
-      }
-
-      if (values.email === 'student@test.com' && values.password === 'student123') {
-        localStorage.setItem('token', 'dummy_token_student');
-        localStorage.setItem('userRole', 'STUDENT');
-        localStorage.setItem('userId', 'S2024001');
-        localStorage.setItem('userEmail', values.email);
-        message.success('Login successful (Student - Test Mode)');
-        navigate('/student/dashboard', { replace: true });
-        setLoading(false);
-        return;
-      }
-      // ⚠️ END TESTING ONLY CODE ⚠️
-
-      // Real backend login using authService
+      // Real backend login
       const response = await login(values.email, values.password);
       const { access_token, token_type } = response.data;
 
@@ -93,9 +58,15 @@ export default function Login() {
           case 'STUDENT':
             navigate('/student/dashboard', { replace: true });
             break;
+          case 'PARENT':
+            navigate('/parent/dashboard', { replace: true });
+            break;
+          case 'NON_TEACHING_STAFF':
+            navigate('/staff/dashboard', { replace: true });
+            break;
           default:
-            message.warning('Unknown role, redirecting to admin dashboard');
-            navigate('/admin/dashboard', { replace: true });
+            message.warning('Unknown role');
+            navigate('/login', { replace: true });
         }
       } else {
         message.error('Invalid token: role not found');
@@ -140,23 +111,6 @@ export default function Login() {
         <p className="auth-subtitle">
           Don't have an account? <Link to="/register">Register as Admin</Link>
         </p>
-
-        {/* ⚠️ TESTING INFO - REMOVE BEFORE PRODUCTION ⚠️ */}
-        <div style={{ 
-          background: '#fff3cd', 
-          border: '1px solid #ffc107', 
-          borderRadius: '8px', 
-          padding: '12px', 
-          marginBottom: '20px',
-          fontSize: '13px',
-          color: '#856404'
-        }}>
-          <strong>Test Credentials:</strong><br />
-          Admin: admin@test.com / admin123<br />
-          Teacher: teacher@test.com / teacher123<br />
-          Student: student@test.com / student123
-        </div>
-        {/* ⚠️ END TESTING INFO ⚠️ */}
 
         <Form
           name="login"

@@ -1,57 +1,67 @@
-import api from './api';
+import { createAPI } from "./api";
+
+// ✅ Connect to Student Microservice
+const api = createAPI(import.meta.env.VITE_STUDENT_SERVICE);
 
 // ==================== STUDENTS ====================
 
+// Get students
 export const getStudents = async (filters = {}) => {
-  const params = new URLSearchParams();
-  if (filters.name) params.append('name', filters.name);
-  if (filters.admission_number) params.append('admission_number', filters.admission_number);
-  if (filters.class_id) params.append('class_id', filters.class_id);
-  if (filters.section_id) params.append('section_id', filters.section_id);
-  if (filters.academic_year) params.append('academic_year', filters.academic_year);
-  return api.get(`/students?${params.toString()}`);
+  return api.get("/students", {
+    params: filters,
+  });
 };
 
+// Get student by ID
 export const getStudentById = async (id) => {
   return api.get(`/students/${id}`);
 };
 
+// Get logged-in student profile
 export const getStudentProfile = () => {
-  return api.get('/students/me');
+  return api.get("/students/me");
 };
 
+// Create student
 export const createStudent = async (data) => {
-  return api.post('/students', data);
+  return api.post("/students", data);
 };
 
+// Delete student
 export const deleteStudent = async (id) => {
   return api.delete(`/students/${id}`);
 };
 
+// Bulk upload
 export const bulkUploadStudents = async (file) => {
   const formData = new FormData();
-  formData.append('file', file);
-  return api.post('/students/bulk', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+  formData.append("file", file);
+
+  return api.post("/students/bulk", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
   });
 };
 
-// ==================== STUDENT UPDATE APIs ====================
+// ==================== UPDATE APIs ====================
 
-export const updateStudentBasic = (id, data) => 
+export const updateStudentBasic = (id, data) =>
   api.put(`/students/${id}/basic`, data);
 
-export const updateStudentContact = (id, data) => 
+export const updateStudentContact = (id, data) =>
   api.put(`/students/${id}/contact`, data);
 
-export const updateStudentParent = (id, data) => 
+export const updateStudentParent = (id, data) =>
   api.put(`/students/${id}/parent`, data);
 
-export const updateStudentAcademic = (id, data) => 
+export const updateStudentAcademic = (id, data) =>
   api.put(`/students/${id}/academic`, data);
 
-export const updateStudentAdmission = (id, data) => 
+export const updateStudentAdmission = (id, data) =>
   api.put(`/students/${id}/admission`, data);
+
+// ==================== EXPORT ====================
 
 export default {
   getStudents,

@@ -13,14 +13,13 @@ export default function Register() {
     setLoading(true);
 
     try {
-      // Using authService for registration
       const response = await register({
         name: values.name,
         email: values.email,
         password: values.password,
-        phone: null,
-        designation: null,
-        address: null,
+        phone: values.phone,
+        designation: values.designation,
+        address: values.address,
       });
 
       const { access_token, token_type } = response.data;
@@ -82,6 +81,7 @@ export default function Register() {
           requiredMark={false}
           className="auth-form"
         >
+          {/* NAME */}
           <Form.Item
             name="name"
             rules={[
@@ -92,6 +92,7 @@ export default function Register() {
             <Input placeholder="Full Name" size="large" className="auth-input" />
           </Form.Item>
 
+          {/* EMAIL */}
           <Form.Item
             name="email"
             rules={[
@@ -102,6 +103,38 @@ export default function Register() {
             <Input placeholder="Email address" size="large" className="auth-input" />
           </Form.Item>
 
+          {/* PHONE */}
+          <Form.Item
+            name="phone"
+            rules={[
+              { required: true, message: 'Please enter phone number' },
+              { pattern: /^[0-9]{10,15}$/, message: 'Enter valid phone number' },
+            ]}
+          >
+            <Input placeholder="Phone Number" size="large" className="auth-input" />
+          </Form.Item>
+
+          {/* DESIGNATION */}
+          <Form.Item
+            name="designation"
+            rules={[
+              { required: true, message: 'Please enter designation' },
+            ]}
+          >
+            <Input placeholder="Designation" size="large" className="auth-input" />
+          </Form.Item>
+
+          {/* ADDRESS */}
+          <Form.Item
+            name="address"
+            rules={[
+              { required: true, message: 'Please enter address' },
+            ]}
+          >
+            <Input placeholder="Address" size="large" className="auth-input" />
+          </Form.Item>
+
+          {/* PASSWORD */}
           <Form.Item
             name="password"
             rules={[
@@ -117,6 +150,7 @@ export default function Register() {
             />
           </Form.Item>
 
+          {/* CONFIRM PASSWORD */}
           <Form.Item
             name="confirmPassword"
             dependencies={['password']}
@@ -140,8 +174,16 @@ export default function Register() {
             />
           </Form.Item>
 
+          {/* BUTTON */}
           <Form.Item>
-            <Button type="primary" htmlType="submit" size="large" block loading={loading} className="auth-btn">
+            <Button
+              type="primary"
+              htmlType="submit"
+              size="large"
+              block
+              loading={loading}
+              className="auth-btn"
+            >
               Create Admin Account
             </Button>
           </Form.Item>

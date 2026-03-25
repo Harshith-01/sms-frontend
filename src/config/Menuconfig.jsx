@@ -24,8 +24,11 @@ import {
   EditOutlined,
   CalendarOutlined,
   HistoryOutlined,
+  UserAddOutlined,
+  PlusOutlined,
+  IdcardOutlined,
 } from '@ant-design/icons';
-
+ 
 // ==================== ADMIN MENU ====================
 const getAdminMenu = () => {
   return [
@@ -46,6 +49,18 @@ const getAdminMenu = () => {
       label: 'Teachers',
       icon: TeamOutlined,
       path: '/admin/onboarding/teachers',
+    },
+    {
+      key: 'parents',
+      label: 'Parents',
+      icon: UserAddOutlined,
+      path: '/admin/parents',
+    },
+    {
+      key: 'staff',
+      label: 'Staff',
+      icon: IdcardOutlined,
+      path: '/admin/staff',
     },
     {
       key: 'academic',
@@ -209,7 +224,7 @@ const getAdminMenu = () => {
     },
   ];
 };
-
+ 
 // ==================== TEACHER MENU ====================
 const getTeacherMenu = () => {
   return [
@@ -276,7 +291,7 @@ const getTeacherMenu = () => {
     },
   ];
 };
-
+ 
 // ==================== STUDENT MENU ====================
 const getStudentMenu = () => {
   return [
@@ -338,23 +353,102 @@ const getStudentMenu = () => {
   ];
 };
 
+// ==================== PARENT MENU ====================
+const getParentMenu = () => {
+  return [
+    {
+      key: 'dashboard',
+      label: 'Dashboard',
+      icon: DashboardOutlined,
+      path: '/parent/dashboard',
+    },
+    {
+      key: 'profile',
+      label: 'My Profile',
+      icon: UserOutlined,
+      path: '/parent/profile',
+    },
+    {
+      key: 'children',
+      label: 'My Children',
+      icon: TeamOutlined,
+      path: '/parent/children',
+    },
+    {
+      key: 'meetings',
+      label: 'Parent-Teacher Meetings',
+      icon: CalendarOutlined,
+      children: [
+        {
+          key: 'request-meeting',
+          label: 'Request Meeting',
+          icon: PlusOutlined,
+          path: '/parent/meetings/request',
+        },
+        {
+          key: 'my-meetings',
+          label: 'My Meetings',
+          icon: HistoryOutlined,
+          path: '/parent/meetings',
+        },
+      ],
+    },
+  ];
+};
+
+// ==================== STAFF MENU ====================
+const getStaffMenu = () => {
+  return [
+    {
+      key: 'dashboard',
+      label: 'Dashboard',
+      icon: DashboardOutlined,
+      path: '/staff/dashboard',
+    },
+    {
+      key: 'profile',
+      label: 'My Profile',
+      icon: UserOutlined,
+      path: '/staff/profile',
+    },
+    {
+      key: 'timetable',
+      label: 'School Timetable',
+      icon: CalendarOutlined,
+      path: '/staff/timetable',
+    },
+  ];
+};
+ 
 // ==================== MAIN EXPORT ====================
 export const getMenuForRole = (role) => {
-  if (role === 'admin') {
+  // Normalize role to lowercase for consistent matching
+  const normalizedRole = role?.toLowerCase();
+
+  if (normalizedRole === 'admin') {
     return getAdminMenu();
   }
-
-  if (role === 'teacher') {
+ 
+  if (normalizedRole === 'teacher') {
     return getTeacherMenu();
   }
-
-  if (role === 'student') {
+ 
+  if (normalizedRole === 'student') {
     return getStudentMenu();
   }
 
+  if (normalizedRole === 'parent') {
+    return getParentMenu();
+  }
+
+  if (normalizedRole === 'non_teaching_staff' || normalizedRole === 'staff') {
+    return getStaffMenu();
+  }
+ 
+  // Default return empty array if role doesn't match
   return [];
 };
-
+ 
 // ==================== BOTTOM MENU ====================
 export const getBottomForRole = (role) => {
   return [

@@ -1,0 +1,46 @@
+/* Admin Staff Pages */
+.staff-list-container,
+.add-staff-container,
+.staff-details-container,
+.bulk-upload-staff-container {
+  padding: 24px;
+}
+
+.staff-list-container h2,
+.add-staff-container h2,
+.staff-details-container h2,
+.bulk-upload-staff-container h2 {
+  color: #1890ff;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.staff-list-container .ant-table-thead > tr > th,
+.staff-details-container .ant-table-thead > tr > th {
+  background-color: #fafafa;
+  font-weight: 600;
+}
+
+.staff-list-container .ant-card,
+.add-staff-container .ant-card,
+.staff-details-container .ant-card,
+.bulk-upload-staff-container .ant-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.add-staff-container h3,
+.staff-details-container h3 {
+  color: #1890ff;
+  font-weight: 600;
+  margin-top: 24px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+  .staff-list-container,
+  .add-staff-container,
+  .staff-details-container,
+  .bulk-upload-staff-container {
+    padding: 16px;
+  }
+}

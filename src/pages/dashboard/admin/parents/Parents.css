@@ -1,0 +1,92 @@
+/* Parents List Container */
+.parents-list-container {
+  padding: 24px;
+}
+
+.parents-list-container h2 {
+  color: #1890ff;
+  font-weight: 600;
+}
+
+/* Add Parent Container */
+.add-parent-container {
+  padding: 24px;
+}
+
+.add-parent-container h2 {
+  color: #1890ff;
+  font-weight: 600;
+}
+
+/* Parent Details Container */
+.parent-details-container {
+  padding: 24px;
+}
+
+.parent-details-container h2 {
+  color: #1890ff;
+  font-weight: 600;
+}
+
+/* Search Bar Fix - Reduce Height */
+.parents-list-container .ant-input-search {
+  height: 40px;
+}
+
+.parents-list-container .ant-input-search .ant-input {
+  height: 40px;
+  line-height: 40px;
+}
+
+.parents-list-container .ant-input-search .ant-input-search-button {
+  height: 40px;
+}
+
+.parents-list-container .ant-select-selector {
+  height: 40px !important;
+}
+
+.parents-list-container .ant-select-selection-item {
+  line-height: 38px !important;
+}
+
+/* Table Customization */
+.parents-list-container .ant-table-thead > tr > th {
+  background-color: #fafafa;
+  font-weight: 600;
+}
+
+.parents-list-container .ant-table-row:hover {
+  background-color: #f5f5f5;
+  cursor: pointer;
+}
+
+/* Status Tags */
+.parents-list-container .ant-tag {
+  font-weight: 500;
+}
+
+/* Form Styling */
+.add-parent-container .ant-form-item-label > label {
+  font-weight: 500;
+}
+
+.parent-details-container .ant-form-item-label > label {
+  font-weight: 500;
+}
+
+/* Card Spacing */
+.parents-list-container .ant-card,
+.add-parent-container .ant-card,
+.parent-details-container .ant-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .parents-list-container,
+  .add-parent-container,
+  .parent-details-container {
+    padding: 16px;
+  }
+}

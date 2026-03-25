@@ -1,25 +1,30 @@
-import api from './api';
+import { createAPI } from "./api";
+
+// ✅ Create separate APIs
+const studentAPI = createAPI(import.meta.env.VITE_STUDENT_SERVICE);
+const teacherAPI = createAPI(import.meta.env.VITE_TEACHER_SERVICE);
 
 // ==================== PROFILE APIS ====================
 
+// Student profile
 export const getStudentProfile = () => {
-  return api.get('/students/me');
+  return studentAPI.get("/students/me");
 };
 
+// Teacher profile
 export const getTeacherProfile = () => {
-  return api.get('/teachers/me');
+  return teacherAPI.get("/teachers/me");
 };
 
+// Optional (not supported yet by backend)
 export const updateProfile = (data) => {
-  return api.put('/profile', data);
+  console.warn("Update profile API not implemented in backend");
+  return Promise.resolve(null);
 };
 
 export const updateProfilePhoto = (file) => {
-  const formData = new FormData();
-  formData.append('photo', file);
-  return api.post('/profile/photo', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  console.warn("Update profile photo API not implemented in backend");
+  return Promise.resolve(null);
 };
 
 export default {

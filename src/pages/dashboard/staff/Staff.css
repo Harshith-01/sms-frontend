@@ -1,0 +1,49 @@
+/* Staff Dashboard Pages */
+.staff-dashboard-container,
+.staff-my-profile-container,
+.school-timetable-container {
+  padding: 24px;
+}
+
+.staff-dashboard-container h2,
+.staff-my-profile-container h2,
+.school-timetable-container h2 {
+  color: #1890ff;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.staff-dashboard-container .welcome-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+}
+
+.staff-dashboard-container .welcome-card h3 {
+  color: white;
+  margin-bottom: 8px;
+}
+
+.staff-dashboard-container .welcome-card p {
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+.staff-dashboard-container .ant-card,
+.staff-my-profile-container .ant-card,
+.school-timetable-container .ant-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.school-timetable-container .ant-table-thead > tr > th {
+  background-color: #fafafa;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .staff-dashboard-container,
+  .staff-my-profile-container,
+  .school-timetable-container {
+    padding: 16px;
+  }
+}

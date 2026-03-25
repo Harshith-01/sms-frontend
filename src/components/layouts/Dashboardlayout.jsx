@@ -7,10 +7,10 @@ import './DashboardLayout.css';
 
 const { Content } = Layout;
 
-/* extract "admin" | "teacher" | "student" from /admin/…  /teacher/… etc */
+
 function deriveRole(pathname) {
   const first = pathname.split('/').filter(Boolean)[0]; // e.g. "admin"
-  return ['admin', 'teacher', 'student'].includes(first) ? first : 'admin';
+  return ['admin', 'teacher', 'student', 'parent'].includes(first) ? first : 'admin';
 }
 
 export default function DashboardLayout() {

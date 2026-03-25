@@ -1,0 +1,183 @@
+/* Parent Dashboard Container */
+.parent-dashboard-container {
+  padding: 24px;
+}
+
+.parent-dashboard-container h2,
+.parent-profile-container h2,
+.my-children-container h2,
+.child-attendance-container h2,
+.child-report-cards-container h2,
+.child-exam-schedule-container h2,
+.child-timetable-container h2,
+.request-meeting-container h2,
+.my-meetings-container h2 {
+  color: #1890ff;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+/* Parent Profile Container */
+.parent-profile-container {
+  padding: 24px;
+}
+
+/* My Children Container */
+.my-children-container {
+  padding: 24px;
+}
+
+.child-card {
+  transition: all 0.3s;
+  border: 1px solid #f0f0f0;
+}
+
+.child-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #1890ff;
+}
+
+/* Child Attendance Container */
+.child-attendance-container {
+  padding: 24px;
+}
+
+/* Child Report Cards Container */
+.child-report-cards-container {
+  padding: 24px;
+}
+
+/* Child Exam Schedule Container */
+.child-exam-schedule-container {
+  padding: 24px;
+}
+
+/* Child Timetable Container */
+.child-timetable-container {
+  padding: 24px;
+}
+
+/* Request Meeting Container */
+.request-meeting-container {
+  padding: 24px;
+}
+
+/* My Meetings Container */
+.my-meetings-container {
+  padding: 24px;
+}
+
+/* Welcome Card */
+.welcome-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+}
+
+.welcome-card h3 {
+  color: white;
+  margin-bottom: 8px;
+}
+
+.welcome-card p {
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+/* Table Customizations */
+.parent-dashboard-container .ant-table-thead > tr > th,
+.my-children-container .ant-table-thead > tr > th,
+.child-attendance-container .ant-table-thead > tr > th,
+.child-report-cards-container .ant-table-thead > tr > th,
+.child-exam-schedule-container .ant-table-thead > tr > th,
+.child-timetable-container .ant-table-thead > tr > th,
+.my-meetings-container .ant-table-thead > tr > th {
+  background-color: #fafafa;
+  font-weight: 600;
+}
+
+/* Card Shadows */
+.parent-dashboard-container .ant-card,
+.parent-profile-container .ant-card,
+.my-children-container .ant-card,
+.child-attendance-container .ant-card,
+.child-report-cards-container .ant-card,
+.child-exam-schedule-container .ant-card,
+.child-timetable-container .ant-card,
+.request-meeting-container .ant-card,
+.my-meetings-container .ant-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Statistic Cards Hover Effect */
+.parent-dashboard-container .ant-statistic {
+  transition: all 0.3s;
+}
+
+.parent-dashboard-container .ant-card:hover .ant-statistic {
+  transform: scale(1.05);
+}
+
+/* List Item Hover */
+.parent-dashboard-container .ant-list-item {
+  transition: all 0.3s;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.parent-dashboard-container .ant-list-item:hover {
+  background-color: #f5f5f5;
+}
+
+/* Tags Styling */
+.parent-dashboard-container .ant-tag,
+.parent-profile-container .ant-tag,
+.my-children-container .ant-tag,
+.my-meetings-container .ant-tag {
+  font-weight: 500;
+}
+
+/* Form Labels */
+.request-meeting-container .ant-form-item-label > label {
+  font-weight: 500;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .parent-dashboard-container,
+  .parent-profile-container,
+  .my-children-container,
+  .child-attendance-container,
+  .child-report-cards-container,
+  .child-exam-schedule-container,
+  .child-timetable-container,
+  .request-meeting-container,
+  .my-meetings-container {
+    padding: 16px;
+  }
+
+  .parent-dashboard-container h2,
+  .parent-profile-container h2,
+  .my-children-container h2,
+  .child-attendance-container h2,
+  .child-report-cards-container h2,
+  .child-exam-schedule-container h2,
+  .child-timetable-container h2,
+  .request-meeting-container h2,
+  .my-meetings-container h2 {
+    font-size: 20px;
+  }
+}
+
+/* Empty State */
+.parent-dashboard-container .ant-empty,
+.my-children-container .ant-empty,
+.my-meetings-container .ant-empty {
+  padding: 40px 20px;
+}
+
+/* Button Groups */
+.parent-dashboard-container .ant-space-item,
+.my-meetings-container .ant-space-item {
+  margin-bottom: 8px;
+}
