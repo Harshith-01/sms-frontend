@@ -91,6 +91,7 @@ import StudentAssignments from '../pages/dashboard/student/StudentAssignments';
 import StudentExams from '../pages/dashboard/student/StudentExams';
 import StudentReportCards from '../pages/dashboard/student/StudentReportCards';
 import StudentFeeStatus from '../pages/dashboard/student/StudentFeeStatus';
+import StudentSchedule from '../pages/dashboard/student/StudentSchedule';
 
 // 🆕 Student Document Pages
 import StudentMyDocuments from '../pages/dashboard/student/documents/MyDocuments';
@@ -100,6 +101,7 @@ import StudentUploadDocument from '../pages/dashboard/student/documents/UploadDo
 import TeacherAssignments from '../pages/dashboard/teacher/TeacherAssignments';
 import TeacherExams from '../pages/dashboard/teacher/TeacherExams';
 import TeacherGrading from '../pages/dashboard/teacher/TeacherGrading';
+import TeacherSchedule from '../pages/dashboard/teacher/TeacherSchedule';
 
 // 🆕 Teacher Document Pages
 import TeacherMyDocuments from '../pages/dashboard/teacher/documents/MyDocuments';
@@ -228,6 +230,7 @@ export default function AppRoutes() {
         <Route path="assignments" element={<TeacherAssignments />} />
         <Route path="exams" element={<TeacherExams />} />
         <Route path="grading" element={<TeacherGrading />} />
+        <Route path="schedule" element={<TeacherSchedule />} />
         
         {/* 🆕 Teacher Documents */}
         <Route path="documents" element={<TeacherMyDocuments />} />
@@ -255,6 +258,7 @@ export default function AppRoutes() {
         <Route path="exams" element={<StudentExams />} />
         <Route path="report-cards" element={<StudentReportCards />} />
         <Route path="fees" element={<StudentFeeStatus />} />
+        <Route path="schedule" element={<StudentSchedule />} />
         
         {/* 🆕 Student Documents */}
         <Route path="documents" element={<StudentMyDocuments />} />
