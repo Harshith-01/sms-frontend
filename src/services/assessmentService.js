@@ -107,6 +107,10 @@ export const getAssignmentSubmissions = async (assignmentId) => {
   );
 };
 
+export const submitAssignment = async (assignmentId, data) => {
+  return await api.post(`/assessment/assignments/${assignmentId}/submit`, data);
+};
+
 // ==================== BULK MARKS ====================
 export const bulkUploadExamMarks = async (data) => {
   return await api.post("/assessment/exam-marks/bulk-upload", data);
