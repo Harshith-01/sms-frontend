@@ -33,7 +33,7 @@ export default function Login() {
     try {
       // Real backend login
       const response = await login(values.email, values.password);
-      const { access_token, token_type } = response.data;
+      const { access_token, token_type, profile_id, user_id } = response.data;
 
       localStorage.setItem('token', access_token);
       localStorage.setItem('tokenType', token_type);
@@ -42,8 +42,11 @@ export default function Login() {
       
       if (decoded && decoded.role) {
         const role = decoded.role.toUpperCase();
+        const profileId = profile_id || decoded.profile_id || decoded.entity_id;
+        const authUserId = user_id || decoded.user_id || decoded.sub;
         localStorage.setItem('userRole', role);
-        localStorage.setItem('userId', decoded.user_id || decoded.sub);
+        localStorage.setItem('authUserId', authUserId);
+        localStorage.setItem('userId', profileId || authUserId);
         localStorage.setItem('userEmail', decoded.email || values.email);
 
         message.success('Login successful');

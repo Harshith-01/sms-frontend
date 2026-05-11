@@ -37,6 +37,15 @@ const weekShape = (total, key) => {
   }));
 };
 
+/* normalize list payloads across services */
+const toArray = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.results)) return payload.results;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.items)) return payload.items;
+  return [];
+};
+
 /* ─── KPI card ────────────────────────────────────────────── */
 const KpiCard = ({ icon, label, value, chips, accent, onClick }) => (
   <button className="adp-kpi" style={{ '--a': accent }} onClick={onClick}>
@@ -120,12 +129,12 @@ export default function AdminDashboard() {
         getFeePayments({}).catch(() => ({ data: [] })),
       ]);
 
-      const students = sR.data?.results  || sR.data  || [];
-      const teachers = tR.data?.results  || tR.data  || [];
-      const staff    = stR.data?.results || stR.data || [];
-      const classes  = cR.data?.results  || cR.data  || [];
-      const fees     = fR.data?.results  || fR.data  || [];
-      const pays     = pR.data?.results  || pR.data  || [];
+      const students = toArray(sR.data);
+      const teachers = toArray(tR.data);
+      const staff    = toArray(stR.data);
+      const classes  = toArray(cR.data);
+      const fees     = toArray(fR.data);
+      const pays     = toArray(pR.data);
 
       const actS  = students.filter(x => x.status === 'ACTIVE').length;
       const actT  = teachers.filter(x => x.status === 'ACTIVE').length;

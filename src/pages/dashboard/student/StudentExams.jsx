@@ -8,7 +8,7 @@ export default function StudentExams() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const studentId = localStorage.getItem('userId');
+  const studentId = localStorage.getItem('userId') || localStorage.getItem('authUserId');
 
   useEffect(() => {
     fetchData();
@@ -17,8 +17,13 @@ export default function StudentExams() {
   const fetchData = async () => {
     setLoading(true);
     try {
+      if (!studentId) {
+        setData([]);
+        return;
+      }
       const response = await getStudentExamHistory(studentId);
-      setData(response.data.data || []);
+      const rows = Array.isArray(response?.data?.data) ? response.data.data : [];
+      setData(rows);
     } catch (error) {
       message.error('Failed to fetch exams');
     } finally {

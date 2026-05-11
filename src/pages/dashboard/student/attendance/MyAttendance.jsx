@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Card, Progress, message } from 'antd';
-import { getStudentAttendanceSummary } from '../../../../services/attendanceService';
+import { getStudentAttendanceHistory } from '../../../../services/attendanceService';
 import './Attendance.css';
 
 export default function MyAttendance() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const studentId = localStorage.getItem('userId') || 'STD2024001';
-  const classSectionId = 3;
-  const academicTermId = 1;
+  const studentId = localStorage.getItem('userId') || localStorage.getItem('authUserId');
 
   useEffect(() => {
     fetchData();
@@ -18,8 +16,45 @@ export default function MyAttendance() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await getStudentAttendanceSummary(studentId, classSectionId, academicTermId);
-      setData(response.data);
+      if (!studentId) {
+        setData(null);
+        return;
+      }
+
+      const response = await getStudentAttendanceHistory(studentId);
+      const rows = Array.isArray(response?.data?.data) ? response.data.data : [];
+
+      const totalSessions = rows.length;
+      const absentSessions = rows.filter((r) => {
+        const status = String(r.status || '').toUpperCase();
+        return status.includes('ABSENT');
+      }).length;
+      const attendancePercent = totalSessions > 0
+        ? ((totalSessions - absentSessions) / totalSessions) * 100
+        : 0;
+
+      const subjectMap = new Map();
+      rows.forEach((r) => {
+        const key = r.subject_name || 'Unknown';
+        const current = subjectMap.get(key) || { subject_name: key, total: 0, absent: 0, percentage: 0 };
+        current.total += 1;
+        const status = String(r.status || '').toUpperCase();
+        if (status.includes('ABSENT')) current.absent += 1;
+        subjectMap.set(key, current);
+      });
+
+      const subjectWise = Array.from(subjectMap.values()).map((s) => ({
+        ...s,
+        percentage: s.total > 0 ? ((s.total - s.absent) / s.total) * 100 : 0,
+      }));
+
+      setData({
+        total_sessions: totalSessions,
+        absent_sessions: absentSessions,
+        attendance_percent: attendancePercent,
+        min_required_percent: 75,
+        subject_wise: subjectWise,
+      });
     } catch (error) {
       message.error('Failed to fetch attendance summary');
     } finally {

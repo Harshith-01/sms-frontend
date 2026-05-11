@@ -9,6 +9,14 @@ import './Assessment.css';
 const { Option } = Select;
 const { TextArea } = Input;
 
+const extractRows = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.results)) return payload.results;
+  if (Array.isArray(payload?.items)) return payload.items;
+  return [];
+};
+
 export default function Assignments() {
   const [data, setData] = useState([]);
   const [academicYears, setAcademicYears] = useState([]);
@@ -30,7 +38,7 @@ export default function Assignments() {
   const fetchAcademicYears = async () => {
     try {
       const response = await getAcademicYears();
-      setAcademicYears(response.data || []);
+      setAcademicYears(extractRows(response?.data));
     } catch (error) {
       console.error(error);
     }
@@ -39,7 +47,7 @@ export default function Assignments() {
   const fetchClassSections = async () => {
     try {
       const response = await getClassSections();
-      setClassSections(response.data || []);
+      setClassSections(extractRows(response?.data));
     } catch (error) {
       console.error(error);
     }
@@ -48,7 +56,7 @@ export default function Assignments() {
   const fetchSubjects = async () => {
     try {
       const response = await getSubjects();
-      setSubjects(response.data || []);
+      setSubjects(extractRows(response?.data));
     } catch (error) {
       console.error(error);
     }
@@ -58,7 +66,7 @@ export default function Assignments() {
     setLoading(true);
     try {
       const response = await getAssignments(filters);
-      setData(response.data.data || []);
+      setData(extractRows(response?.data));
     } catch (error) {
       message.error('Failed to fetch assignments');
     } finally {

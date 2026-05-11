@@ -47,6 +47,15 @@ const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 
+const extractRows = (res) => {
+  const d = res?.data;
+  if (Array.isArray(d)) return d;
+  if (Array.isArray(d?.data)) return d.data;
+  if (Array.isArray(d?.results)) return d.results;
+  if (Array.isArray(d?.items)) return d.items;
+  return [];
+};
+
 // ─── Status tag configs ────────────────────────────────────────────────────────
 
 const ASSIGNMENT_STATUS_CONFIG = {
@@ -156,8 +165,8 @@ const StudentAssignments = () => {
   const fetchAssignments = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getAssignments();
-      setAssignments(Array.isArray(data) ? data : data?.data || []);
+      const response = await getAssignments({}, 1, 200);
+      setAssignments(extractRows(response));
     } catch (err) {
       notification.error({
         message: "Failed to load assignments",
@@ -171,11 +180,13 @@ const StudentAssignments = () => {
   const fetchHistory = useCallback(async () => {
     setHistoryLoading(true);
     try {
-      // student_id ideally from auth context; use a placeholder if not available
-      const studentId =
-        JSON.parse(localStorage.getItem("user") || "{}")?.id || "me";
-      const data = await getStudentAssignmentHistory(studentId);
-      setHistory(Array.isArray(data) ? data : data?.data || []);
+      const studentId = localStorage.getItem('userId') || localStorage.getItem('authUserId');
+      if (!studentId) {
+        setHistory([]);
+        return;
+      }
+      const response = await getStudentAssignmentHistory(studentId, 1, 200);
+      setHistory(extractRows(response));
     } catch {
       // history is supplementary; silently ignore
     } finally {

@@ -13,7 +13,7 @@ export default function AttendanceHistory() {
   const [loading, setLoading] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState(null);
 
-  const studentId = localStorage.getItem('userId') || 'STD2024001';
+  const studentId = localStorage.getItem('userId') || localStorage.getItem('authUserId');
 
   useEffect(() => {
     fetchData();
@@ -22,8 +22,13 @@ export default function AttendanceHistory() {
   const fetchData = async () => {
     setLoading(true);
     try {
+      if (!studentId) {
+        setData([]);
+        return;
+      }
       const response = await getStudentAttendanceHistory(studentId);
-      setData(response.data.data || []);
+      const rows = Array.isArray(response?.data?.data) ? response.data.data : [];
+      setData(rows);
     } catch (error) {
       message.error('Failed to fetch attendance history');
     } finally {

@@ -9,6 +9,14 @@ import './Fees.css';
 const { Option } = Select;
 const { TextArea } = Input;
 
+const extractRows = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.results)) return payload.results;
+  if (Array.isArray(payload?.items)) return payload.items;
+  return [];
+};
+
 export default function FeePayments() {
   const [data, setData] = useState([]);
   const [feeTerms, setFeeTerms] = useState([]);
@@ -25,7 +33,7 @@ export default function FeePayments() {
   const fetchFeeTerms = async () => {
     try {
       const response = await getStudentFeeTerms({});
-      setFeeTerms(response.data.data || []);
+      setFeeTerms(extractRows(response?.data));
     } catch (error) {
       message.error('Failed to fetch fee terms');
     }
@@ -35,7 +43,7 @@ export default function FeePayments() {
     setLoading(true);
     try {
       const response = await getFeePayments(filters);
-      setData(response.data.data || []);
+      setData(extractRows(response?.data));
     } catch (error) {
       message.error('Failed to fetch payments');
     } finally {

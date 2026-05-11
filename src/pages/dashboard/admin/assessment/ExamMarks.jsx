@@ -7,6 +7,14 @@ import './Assessment.css';
 
 const { Option } = Select;
 
+const extractRows = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.results)) return payload.results;
+  if (Array.isArray(payload?.items)) return payload.items;
+  return [];
+};
+
 export default function ExamMarks() {
   const [data, setData] = useState([]);
   const [exams, setExams] = useState([]);
@@ -20,7 +28,7 @@ export default function ExamMarks() {
   const fetchExams = async () => {
     try {
       const response = await getExams({});
-      setExams(response.data.data || []);
+      setExams(extractRows(response?.data));
     } catch (error) {
       message.error('Failed to fetch exams');
     }

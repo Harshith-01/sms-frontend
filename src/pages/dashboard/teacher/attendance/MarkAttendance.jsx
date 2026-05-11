@@ -11,6 +11,14 @@ import './Attendance.css';
 const { Option } = Select;
 const { TextArea } = Input;
 
+const extractRows = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.results)) return payload.results;
+  if (Array.isArray(payload?.items)) return payload.items;
+  return [];
+};
+
 export default function MarkAttendance() {
   const [classSections, setClassSections] = useState([]);
   const [academicTerms, setAcademicTerms] = useState([]);
@@ -39,9 +47,10 @@ export default function MarkAttendance() {
   const fetchClassSections = async () => {
     try {
       const response = await getClassSections();
-      setClassSections(response.data || []);
-      if (response.data?.length > 0) {
-        setSelectedClassSection(response.data[0].id);
+      const rows = extractRows(response?.data);
+      setClassSections(rows);
+      if (rows.length > 0) {
+        setSelectedClassSection(rows[0].id);
       }
     } catch (error) {
       message.error('Failed to fetch class sections');
@@ -51,8 +60,9 @@ export default function MarkAttendance() {
   const fetchAcademicTerms = async () => {
     try {
       const response = await getAcademicTerms();
-      setAcademicTerms(response.data || []);
-      const current = response.data?.find(t => t.is_current);
+      const rows = extractRows(response?.data);
+      setAcademicTerms(rows);
+      const current = rows.find(t => t.is_current);
       if (current) {
         setSelectedAcademicTerm(current.id);
       }
@@ -64,9 +74,10 @@ export default function MarkAttendance() {
   const fetchSubjects = async () => {
     try {
       const response = await getSubjects();
-      setSubjects(response.data || []);
-      if (response.data?.length > 0) {
-        setSelectedSubject(response.data[0].id);
+      const rows = extractRows(response?.data);
+      setSubjects(rows);
+      if (rows.length > 0) {
+        setSelectedSubject(rows[0].id);
       }
     } catch (error) {
       message.error('Failed to fetch subjects');
@@ -76,10 +87,11 @@ export default function MarkAttendance() {
   const fetchStudents = async () => {
     try {
       const response = await getStudents();
-      setStudents(response.data.data || []);
+      const rows = extractRows(response?.data);
+      setStudents(rows);
       
       const initialData = {};
-      (response.data.data || []).forEach(student => {
+      rows.forEach(student => {
         initialData[student.admission_number] = {
           status: 'present',
           absence_type: null,

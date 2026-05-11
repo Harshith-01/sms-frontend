@@ -7,6 +7,14 @@ import './Assessment.css';
 const { Option } = Select;
 const { TextArea } = Input;
 
+const extractRows = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.results)) return payload.results;
+  if (Array.isArray(payload?.items)) return payload.items;
+  return [];
+};
+
 export default function GradeBands() {
   const [data, setData] = useState([]);
   const [gradeScales, setGradeScales] = useState([]);
@@ -28,7 +36,7 @@ export default function GradeBands() {
   const fetchGradeScales = async () => {
     try {
       const response = await getGradeScales();
-      setGradeScales(response.data.data || []);
+      setGradeScales(extractRows(response?.data));
     } catch (error) {
       message.error('Failed to fetch grade scales');
     }
@@ -39,7 +47,7 @@ export default function GradeBands() {
     setLoading(true);
     try {
       const response = await getGradeBands(filters.scale_id);
-      setData(response.data.data || []);
+      setData(extractRows(response?.data));
     } catch (error) {
       message.error('Failed to fetch grade bands');
       console.error(error);

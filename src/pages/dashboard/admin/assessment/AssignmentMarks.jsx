@@ -8,6 +8,14 @@ import './Assessment.css';
 
 const { Option } = Select;
 
+const extractRows = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.results)) return payload.results;
+  if (Array.isArray(payload?.items)) return payload.items;
+  return [];
+};
+
 export default function AssignmentMarks() {
   const [data, setData] = useState([]);
   const [assignments, setAssignments] = useState([]);
@@ -21,7 +29,7 @@ export default function AssignmentMarks() {
   const fetchAssignments = async () => {
     try {
       const response = await getAssignments({});
-      setAssignments(response.data.data || []);
+      setAssignments(extractRows(response?.data));
     } catch (error) {
       message.error('Failed to fetch assignments');
     }

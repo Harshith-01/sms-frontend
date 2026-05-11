@@ -19,7 +19,10 @@ export const register = async (data) => {
 export const logout = () => {
   // Backend does not have logout → just clear storage
   localStorage.removeItem("token");
+  localStorage.removeItem("tokenType");
   localStorage.removeItem("userRole");
+  localStorage.removeItem("userId");
+  localStorage.removeItem("authUserId");
   localStorage.removeItem("userName");
   localStorage.removeItem("userEmail");
 

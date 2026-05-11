@@ -8,6 +8,14 @@ import './Fees.css';
 
 const { Option } = Select;
 
+const extractRows = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.results)) return payload.results;
+  if (Array.isArray(payload?.items)) return payload.items;
+  return [];
+};
+
 export default function StudentFees() {
   const [data, setData] = useState([]);
   const [academicYears, setAcademicYears] = useState([]);
@@ -25,7 +33,7 @@ export default function StudentFees() {
   const fetchAcademicYears = async () => {
     try {
       const response = await getAcademicYears();
-      setAcademicYears(response.data || []);
+      setAcademicYears(extractRows(response?.data));
     } catch (error) {
       message.error('Failed to fetch academic years');
     }
@@ -35,7 +43,7 @@ export default function StudentFees() {
     setLoading(true);
     try {
       const response = await getStudentFeeTerms(filters);
-      setData(response.data.data || []);
+      setData(extractRows(response?.data));
     } catch (error) {
       message.error('Failed to fetch student fees');
     } finally {

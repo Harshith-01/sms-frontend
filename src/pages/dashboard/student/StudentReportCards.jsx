@@ -9,7 +9,7 @@ export default function StudentReportCards() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const studentId = localStorage.getItem('userId') || 'STD2024001'; // Default for testing
+  const studentId = localStorage.getItem('userId') || localStorage.getItem('authUserId');
 
   useEffect(() => {
     fetchData();
@@ -18,9 +18,13 @@ export default function StudentReportCards() {
   const fetchData = async () => {
     setLoading(true);
     try {
+      if (!studentId) {
+        setData([]);
+        return;
+      }
       const response = await getStudentReportCards(studentId);
-      console.log('Report Cards Response:', response); // Debug log
-      setData(response.data.data || []);
+      const rows = Array.isArray(response?.data?.data) ? response.data.data : [];
+      setData(rows);
     } catch (error) {
       console.error('Error fetching report cards:', error);
       message.error('Failed to fetch report cards');

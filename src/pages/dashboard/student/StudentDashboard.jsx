@@ -19,7 +19,7 @@ export default function StudentDashboard() {
   const [upcomingExams, setUpcomingExams] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const studentId = localStorage.getItem('userId');
+  const studentId = localStorage.getItem('userId') || localStorage.getItem('authUserId');
 
   useEffect(() => {
     fetchDashboardData();
@@ -28,26 +28,52 @@ export default function StudentDashboard() {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
+      if (!studentId) {
+        setRecentAssignments([]);
+        setUpcomingExams([]);
+        setStats(prev => ({ ...prev, totalAssignments: 0, completedAssignments: 0, upcomingExams: 0, feeBalance: 0 }));
+        return;
+      }
+
       // Fetch assignments
-      const assignmentsRes = await getStudentAssignmentHistory(studentId, 1, 5);
-      setRecentAssignments(assignmentsRes.data.data || []);
-      setStats(prev => ({ 
-        ...prev, 
-        totalAssignments: assignmentsRes.data.total || 0,
-        completedAssignments: assignmentsRes.data.data?.filter(a => a.status === 'Submitted').length || 0
-      }));
+      try {
+        const assignmentsRes = await getStudentAssignmentHistory(studentId, 1, 5);
+        const assignmentsData = Array.isArray(assignmentsRes?.data?.data) ? assignmentsRes.data.data : [];
+        setRecentAssignments(assignmentsData);
+        setStats(prev => ({ 
+          ...prev, 
+          totalAssignments: assignmentsRes?.data?.total || 0,
+          completedAssignments: assignmentsData?.filter(a => a.status === 'Submitted').length || 0
+        }));
+      } catch (assignmentError) {
+        console.error('Failed to fetch assignment history:', assignmentError.response?.status);
+        setRecentAssignments([]);
+      }
 
       // Fetch exams
-      const examsRes = await getStudentExamHistory(studentId, 1, 5);
-      setUpcomingExams(examsRes.data.data || []);
-      setStats(prev => ({ ...prev, upcomingExams: examsRes.data.total || 0 }));
+      try {
+        const examsRes = await getStudentExamHistory(studentId, 1, 5);
+        const examsData = Array.isArray(examsRes?.data?.data) ? examsRes.data.data : [];
+        setUpcomingExams(examsData);
+        setStats(prev => ({ ...prev, upcomingExams: examsRes?.data?.total || 0 }));
+      } catch (examError) {
+        console.error('Failed to fetch exam history:', examError.response?.status);
+        setUpcomingExams([]);
+      }
 
       // Fetch fees
-      const feesRes = await getStudentFeeTerms({ student_id: studentId });
-      const totalBalance = feesRes.data.data?.reduce((sum, fee) => sum + (fee.balance_amount || 0), 0) || 0;
-      setStats(prev => ({ ...prev, feeBalance: totalBalance }));
+      try {
+        const feesRes = await getStudentFeeTerms({ student_id: studentId });
+        const totalBalance = Array.isArray(feesRes?.data?.data) 
+          ? feesRes.data.data.reduce((sum, fee) => sum + (fee.balance_amount || 0), 0) 
+          : 0;
+        setStats(prev => ({ ...prev, feeBalance: totalBalance }));
+      } catch (feeError) {
+        console.error('Failed to fetch fees:', feeError.response?.status);
+        setStats(prev => ({ ...prev, feeBalance: 0 }));
+      }
     } catch (error) {
-      console.error('Failed to fetch dashboard data');
+      console.error('Failed to fetch dashboard data:', error);
     } finally {
       setLoading(false);
     }

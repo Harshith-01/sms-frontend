@@ -8,6 +8,14 @@ import './Assessment.css';
 
 const { Option } = Select;
 
+const extractRows = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.results)) return payload.results;
+  if (Array.isArray(payload?.items)) return payload.items;
+  return [];
+};
+
 export default function ReportCards() {
   const [data, setData] = useState([]);
   const [academicYears, setAcademicYears] = useState([]);
@@ -23,7 +31,7 @@ export default function ReportCards() {
   const fetchAcademicYears = async () => {
     try {
       const response = await getAcademicYears();
-      setAcademicYears(response.data || []);
+      setAcademicYears(extractRows(response?.data));
     } catch (error) {
       message.error('Failed to fetch academic years');
     }
@@ -37,7 +45,7 @@ export default function ReportCards() {
     setLoading(true);
     try {
       const response = await getStudentReportCards(filters.student_id);
-      setData(response.data.data || []);
+      setData(extractRows(response?.data));
     } catch (error) {
       message.error('Failed to fetch report cards');
     } finally {
@@ -58,7 +66,7 @@ export default function ReportCards() {
 
   const handlePublish = async (reportCardId) => {
     try {
-      await publishReportCards({ report_card_ids: [reportCardId] });
+      await publishReportCards([reportCardId]);
       message.success('Report card published successfully');
       fetchData();
     } catch (error) {

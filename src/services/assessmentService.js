@@ -45,7 +45,7 @@ export const createComponentWeight = async (data) => {
 // ==================== EXAMS ====================
 export const getExams = async (filters = {}, page = 1, pageSize = 10) => {
   return await api.get("/assessment/exams", {
-    params: { ...filters, page, pageSize },
+    params: { ...filters, page, page_size: pageSize },
   });
 };
 
@@ -62,17 +62,17 @@ export const updateExam = async (id, data) => {
 };
 
 export const publishExam = async (id) => {
-  return await api.post(`/assessment/exams/${id}/publish`);
+  return await api.patch(`/assessment/exams/${id}/publish`);
 };
 
 export const cancelExam = async (id) => {
-  return await api.post(`/assessment/exams/${id}/cancel`);
+  return await api.patch(`/assessment/exams/${id}/cancel`);
 };
 
 // ==================== ASSIGNMENTS ====================
 export const getAssignments = async (filters = {}, page = 1, pageSize = 10) => {
   return await api.get("/assessment/assignments", {
-    params: { ...filters, page, pageSize },
+    params: { ...filters, page, page_size: pageSize },
   });
 };
 
@@ -89,15 +89,15 @@ export const updateAssignment = async (id, data) => {
 };
 
 export const publishAssignment = async (id) => {
-  return await api.post(`/assessment/assignments/${id}/publish`);
+  return await api.patch(`/assessment/assignments/${id}/publish`);
 };
 
 export const closeAssignment = async (id) => {
-  return await api.post(`/assessment/assignments/${id}/close`);
+  return await api.patch(`/assessment/assignments/${id}/close`);
 };
 
 export const cancelAssignment = async (id) => {
-  return await api.post(`/assessment/assignments/${id}/cancel`);
+  return await api.patch(`/assessment/assignments/${id}/cancel`);
 };
 
 // ==================== ASSIGNMENT SUBMISSIONS ====================
@@ -113,26 +113,22 @@ export const submitAssignment = async (assignmentId, data) => {
 
 // ==================== BULK MARKS ====================
 export const bulkUploadExamMarks = async (data) => {
-  return await api.post("/assessment/exam-marks/bulk-upload", data);
+  return await api.post("/assessment/marks/bulk", data);
 };
 
 export const verifyExamMarks = async (registrationId, remarks) => {
-  return await api.post(
-    `/assessment/exam-registrations/${registrationId}/verify`,
-    { remarks }
-  );
+  return await api.patch(`/assessment/marks/${registrationId}/verify`, {
+    remarks,
+  });
 };
 
 export const bulkUploadAssignmentMarks = async (data) => {
-  return await api.post(
-    "/assessment/assignment-marks/bulk-upload",
-    data
-  );
+  return await api.post("/assessment/assignments/marks/bulk", data);
 };
 
 export const verifyAssignmentMarks = async (submissionId, feedback) => {
-  return await api.post(
-    `/assessment/assignment-submissions/${submissionId}/verify`,
+  return await api.patch(
+    `/assessment/assignment-marks/${submissionId}/verify`,
     { feedback }
   );
 };
@@ -144,8 +140,8 @@ export const getStudentAssignmentHistory = async (
   pageSize = 10
 ) => {
   return await api.get(
-    `/assessment/students/${studentId}/assignment-history`,
-    { params: { page, pageSize } }
+    `/assessment/history/student/${studentId}/assignments`,
+    { params: { page, page_size: pageSize } }
   );
 };
 
@@ -155,14 +151,14 @@ export const getStudentExamHistory = async (
   pageSize = 10
 ) => {
   return await api.get(
-    `/assessment/students/${studentId}/exam-history`,
-    { params: { page, pageSize } }
+    `/assessment/history/student/${studentId}/exam`,
+    { params: { page, page_size: pageSize } }
   );
 };
 
 export const getStudentAcademicHistory = async (studentId) => {
   return await api.get(
-    `/assessment/students/${studentId}/academic-history`
+    `/assessment/history/student/${studentId}/academic`
   );
 };
 
@@ -177,10 +173,14 @@ export const publishReportCards = async (reportCardIds) => {
   });
 };
 
-export const getStudentReportCards = async (studentId) => {
-  return await api.get(
-    `/assessment/students/${studentId}/report-cards`
-  );
+export const getStudentReportCards = async (
+  studentId,
+  page = 1,
+  pageSize = 10
+) => {
+  return await api.get(`/assessment/report-cards/student/${studentId}`, {
+    params: { page, pageSize },
+  });
 };
 
 // ==================== VIEW/DOWNLOAD ====================
