@@ -143,11 +143,8 @@ export default function StudentForm({ mode = 'view' }) {
           },
           contact: {
             email: values.email,
-            contact_number: values.contact_number || "9999999999",
+            contact_number: values.contact_number,
           },
-          parent: {},
-          academic: {},
-          admission: {},
         };
 
         await createStudent(data);
@@ -307,6 +304,7 @@ export default function StudentForm({ mode = 'view' }) {
                 {renderField('Admission Number', '', 'admission_number', 'text', [], true)}
                 {renderField('Full Name', '', 'full_name', 'text', [], true)}
                 {renderField('Email', '', 'email', 'text', [], true)}
+                {renderField('Contact Number', '', 'contact_number', 'text', [], true)}
                 {renderField('Date of Birth', '', 'dob', 'date', [], true)}
                 {renderField('Gender', '', 'gender', 'select', ['Male', 'Female', 'Other'], true)}
                 {renderField('Nationality', '', 'nationality', 'text', [], true)}
