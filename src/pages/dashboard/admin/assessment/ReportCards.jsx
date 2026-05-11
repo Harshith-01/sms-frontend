@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form, message, Card, Select, Row, Col, Input, Tag } from 'antd';
 import { FileTextOutlined, CheckCircleOutlined, EyeOutlined, DownloadOutlined, ReloadOutlined } from '@ant-design/icons';
 import { generateReportCards, publishReportCards, getStudentReportCards } from '../../../../services/assessmentService';
-import { getAcademicYears } from '../../../../services/academicService';
+import { getAcademicYears, getAcademicTerms, getClassSections } from '../../../../services/academicService';
 import dayjs from 'dayjs';
 import './Assessment.css';
 
@@ -19,13 +19,17 @@ const extractRows = (payload) => {
 export default function ReportCards() {
   const [data, setData] = useState([]);
   const [academicYears, setAcademicYears] = useState([]);
+  const [academicTerms, setAcademicTerms] = useState([]);
+  const [classSections, setClassSections] = useState([]);
   const [loading, setLoading] = useState(false);
   const [generateModalOpen, setGenerateModalOpen] = useState(false);
   const [form] = Form.useForm();
-  const [filters, setFilters] = useState({ student_id: '', academic_year_id: null });
+  const [filters, setFilters] = useState({ student_id: '', academic_year_id: null, academic_term_id: null, class_section_id: null, report_type: null });
 
   useEffect(() => {
     fetchAcademicYears();
+    fetchAcademicTerms();
+    fetchClassSections();
   }, []);
 
   const fetchAcademicYears = async () => {
@@ -37,6 +41,29 @@ export default function ReportCards() {
     }
   };
 
+  const fetchAcademicTerms = async () => {
+    try {
+      const response = await getAcademicTerms();
+      setAcademicTerms(extractRows(response?.data));
+    } catch (error) {
+      message.error('Failed to fetch academic terms');
+    }
+  };
+
+  const fetchClassSections = async () => {
+    try {
+      const response = await getClassSections();
+      setClassSections(extractRows(response?.data));
+    } catch (error) {
+      message.error('Failed to fetch class sections');
+    }
+  };
+
+  const classSectionLabel = (cs) => {
+    const room = cs?.room_number ? ` (${cs.room_number})` : '';
+    return `Class ${cs?.class_id ?? '-'} - Section ${cs?.section_id ?? '-'}${room}`;
+  };
+
   const fetchData = async () => {
     if (!filters.student_id) {
       message.warning('Please enter a student ID');
@@ -44,7 +71,12 @@ export default function ReportCards() {
     }
     setLoading(true);
     try {
-      const response = await getStudentReportCards(filters.student_id);
+      const response = await getStudentReportCards(filters.student_id, 1, 50, {
+        academic_year_id: filters.academic_year_id,
+        academic_term_id: filters.academic_term_id,
+        class_section_id: filters.class_section_id,
+        report_type: filters.report_type,
+      });
       setData(extractRows(response?.data));
     } catch (error) {
       message.error('Failed to fetch report cards');
@@ -55,7 +87,14 @@ export default function ReportCards() {
 
   const handleGenerate = async (values) => {
     try {
-      await generateReportCards(values);
+      const studentIds = typeof values.student_ids === 'string'
+        ? values.student_ids.split(',').map((s) => s.trim()).filter(Boolean)
+        : undefined;
+
+      await generateReportCards({
+        ...values,
+        student_ids: studentIds?.length ? studentIds : undefined,
+      });
       message.success('Report cards generated successfully');
       setGenerateModalOpen(false);
       fetchData();
@@ -75,7 +114,9 @@ export default function ReportCards() {
   };
 
   const getStatusTag = (status) => {
-    return status === 'published' ? <Tag color="green">Published</Tag> : <Tag color="orange">Draft</Tag>;
+    return String(status || '').toUpperCase() === 'PUBLISHED'
+      ? <Tag color="green">Published</Tag>
+      : <Tag color="orange">Draft</Tag>;
   };
 
   const columns = [
@@ -93,7 +134,7 @@ export default function ReportCards() {
         <div style={{ display: 'flex', gap: 8 }}>
           <Button type="link" icon={<EyeOutlined />} className="action-btn view-btn" title="View" />
           <Button type="link" icon={<DownloadOutlined />} className="action-btn" title="Download" />
-          {record.status !== 'published' && (
+          {String(record.status || '').toUpperCase() !== 'PUBLISHED' && (
             <Button type="link" icon={<CheckCircleOutlined />} onClick={() => handlePublish(record.id)} className="action-btn publish-btn" title="Publish" />
           )}
         </div>
@@ -124,6 +165,22 @@ export default function ReportCards() {
                 {academicYears.map(y => <Option key={y.id} value={y.id}>{y.year_label}</Option>)}
               </Select>
             </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Select placeholder="Academic Term" value={filters.academic_term_id} onChange={(value) => setFilters({ ...filters, academic_term_id: value })} size="large" style={{ width: '100%' }} allowClear>
+                {academicTerms.map(t => <Option key={t.id} value={t.id}>{t.term_name}</Option>)}
+              </Select>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Select placeholder="Class Section" value={filters.class_section_id} onChange={(value) => setFilters({ ...filters, class_section_id: value })} size="large" style={{ width: '100%' }} allowClear>
+                {classSections.map(cs => <Option key={cs.id} value={cs.id}>{classSectionLabel(cs)}</Option>)}
+              </Select>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Select placeholder="Report Type" value={filters.report_type} onChange={(value) => setFilters({ ...filters, report_type: value })} size="large" style={{ width: '100%' }} allowClear>
+                <Option value="TERM">TERM</Option>
+                <Option value="ANNUAL">ANNUAL</Option>
+              </Select>
+            </Col>
             <Col xs={24} sm={12} md={4}>
               <Button icon={<ReloadOutlined />} onClick={fetchData} size="large">Search</Button>
             </Col>
@@ -142,15 +199,24 @@ export default function ReportCards() {
               {academicYears.map(y => <Option key={y.id} value={y.id}>{y.year_label}</Option>)}
             </Select>
           </Form.Item>
-          <Form.Item name="exam_id" label="Exam" rules={[{ required: true }]}>
-            <Select placeholder="Select exam" size="large">
-              {/* Load exams based on academic year */}
+          <Form.Item name="academic_term_id" label="Academic Term">
+            <Select placeholder="Select academic term (optional)" size="large" allowClear>
+              {academicTerms.map(t => <Option key={t.id} value={t.id}>{t.term_name}</Option>)}
             </Select>
           </Form.Item>
-          <Form.Item name="student_ids" label="Students">
-            <Select mode="multiple" placeholder="Select students (leave empty for all)" size="large">
-              {/* Load students based on filters */}
+          <Form.Item name="class_section_id" label="Class Section">
+            <Select placeholder="Select class section (optional)" size="large" allowClear>
+              {classSections.map(cs => <Option key={cs.id} value={cs.id}>{classSectionLabel(cs)}</Option>)}
             </Select>
+          </Form.Item>
+          <Form.Item name="report_type" label="Report Type" initialValue="TERM">
+            <Select size="large">
+              <Option value="TERM">TERM</Option>
+              <Option value="ANNUAL">ANNUAL</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item name="student_ids" label="Student IDs (optional, comma separated)">
+            <Input placeholder="e.g. S2,S3" />
           </Form.Item>
         </Form>
       </Modal>

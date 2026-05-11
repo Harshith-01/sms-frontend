@@ -6,6 +6,19 @@ import './Attendance.css';
 
 const { Option } = Select;
 
+const extractRows = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.results)) return payload.results;
+  if (Array.isArray(payload?.items)) return payload.items;
+  return [];
+};
+
+const classSectionLabel = (cs) => {
+  const room = cs?.room_number ? ` (${cs.room_number})` : '';
+  return `Class ${cs?.class_id ?? '-'} - Section ${cs?.section_id ?? '-'}${room}`;
+};
+
 export default function AttendanceReports() {
   const [classSections, setClassSections] = useState([]);
   const [academicTerms, setAcademicTerms] = useState([]);
@@ -35,9 +48,10 @@ export default function AttendanceReports() {
   const fetchClassSections = async () => {
     try {
       const response = await getClassSections();
-      setClassSections(response.data || []);
-      if (response.data?.length > 0) {
-        setSelectedClassSection(response.data[0].id);
+      const rows = extractRows(response?.data);
+      setClassSections(rows);
+      if (rows.length > 0) {
+        setSelectedClassSection(rows[0].id);
       }
     } catch (error) {
       message.error('Failed to fetch class sections');
@@ -47,12 +61,13 @@ export default function AttendanceReports() {
   const fetchAcademicTerms = async () => {
     try {
       const response = await getAcademicTerms();
-      setAcademicTerms(response.data || []);
-      const current = response.data?.find(t => t.is_current);
+      const rows = extractRows(response?.data);
+      setAcademicTerms(rows);
+      const current = rows.find(t => t.is_current);
       if (current) {
         setSelectedAcademicTerm(current.id);
-      } else if (response.data?.length > 0) {
-        setSelectedAcademicTerm(response.data[0].id);
+      } else if (rows.length > 0) {
+        setSelectedAcademicTerm(rows[0].id);
       }
     } catch (error) {
       message.error('Failed to fetch academic terms');
@@ -152,7 +167,7 @@ export default function AttendanceReports() {
           >
             {classSections.map(cs => (
               <Option key={cs.id} value={cs.id}>
-                Class {cs.class_number}-{cs.section_name}
+                {classSectionLabel(cs)}
               </Option>
             ))}
           </Select>
@@ -210,7 +225,7 @@ export default function AttendanceReports() {
               <h3 style={{ marginBottom: 16 }}>Student Attendance Details</h3>
               <Table
                 columns={studentColumns}
-                dataSource={classData.students}
+                dataSource={Array.isArray(classData?.students) ? classData.students : []}
                 rowKey="student_id"
                 loading={loading}
                 pagination={{ pageSize: 20 }}

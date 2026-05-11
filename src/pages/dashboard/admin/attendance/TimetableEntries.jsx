@@ -19,6 +19,11 @@ const extractRows = (payload) => {
 
 const weekdayNames = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
+const classSectionLabel = (cs) => {
+  const room = cs?.room_number ? ` (${cs.room_number})` : '';
+  return `Class ${cs?.class_id ?? '-'} - Section ${cs?.section_id ?? '-'}${room}`;
+};
+
 export default function TimetableEntries() {
   const [data, setData] = useState([]);
   const [classSections, setClassSections] = useState([]);
@@ -167,7 +172,7 @@ export default function TimetableEntries() {
             >
               {classSections.map(cs => (
                 <Option key={cs.id} value={cs.id}>
-                  Class {cs.class_number}-{cs.section_name}
+                  {classSectionLabel(cs)}
                 </Option>
               ))}
             </Select>

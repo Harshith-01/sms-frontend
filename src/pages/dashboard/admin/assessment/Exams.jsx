@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form, Input, message, Card, Popconfirm, Select, Tag, Row, Col, DatePicker, InputNumber } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined, CheckCircleOutlined, StopOutlined } from '@ant-design/icons';
 import { getExams, createExam, updateExam, publishExam, cancelExam } from '../../../../services/assessmentService';
-import { getAcademicYears, getClassSections } from '../../../../services/academicService';
+import { getAcademicYears, getClassSections, getAcademicTerms } from '../../../../services/academicService';
 import dayjs from 'dayjs';
 import './Assessment.css';
 
@@ -20,6 +20,7 @@ const extractRows = (payload) => {
 export default function Exams() {
   const [data, setData] = useState([]);
   const [academicYears, setAcademicYears] = useState([]);
+  const [academicTerms, setAcademicTerms] = useState([]);
   const [classSections, setClassSections] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
@@ -29,9 +30,15 @@ export default function Exams() {
 
   useEffect(() => {
     fetchAcademicYears();
+    fetchAcademicTerms();
     fetchClassSections();
     fetchData();
   }, []);
+
+  const classSectionLabel = (cs) => {
+    const room = cs?.room_number ? ` (${cs.room_number})` : '';
+    return `Class ${cs?.class_id ?? '-'} - Section ${cs?.section_id ?? '-'}${room}`;
+  };
 
   const fetchAcademicYears = async () => {
     try {
@@ -46,6 +53,15 @@ export default function Exams() {
     try {
       const response = await getClassSections();
       setClassSections(extractRows(response?.data));
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchAcademicTerms = async () => {
+    try {
+      const response = await getAcademicTerms();
+      setAcademicTerms(extractRows(response?.data));
     } catch (error) {
       console.error(error);
     }
@@ -81,17 +97,33 @@ export default function Exams() {
 
   const handleSubmit = async (values) => {
     try {
-      const payload = {
-        ...values,
-        start_date: values.start_date ? dayjs(values.start_date).format('YYYY-MM-DD') : null,
-        end_date: values.end_date ? dayjs(values.end_date).format('YYYY-MM-DD') : null,
-      };
-
       if (editingRecord) {
-        await updateExam(editingRecord.id, payload);
+        const updatePayload = {
+          exam_name: values.exam_name,
+          exam_type: values.exam_type,
+          exam_group: values.exam_group,
+          academic_year_id: values.academic_year_id,
+          academic_term_id: values.academic_term_id || null,
+          class_section_id: values.class_section_id,
+          start_date: values.start_date ? dayjs(values.start_date).format('YYYY-MM-DD') : null,
+          end_date: values.end_date ? dayjs(values.end_date).format('YYYY-MM-DD') : null,
+          remarks: values.remarks || null,
+        };
+        await updateExam(editingRecord.id, updatePayload);
         message.success('Exam updated successfully');
       } else {
-        await createExam(payload);
+        const createPayload = {
+          exam_name: values.exam_name,
+          exam_type: values.exam_type,
+          exam_group: values.exam_group,
+          academic_year_id: values.academic_year_id,
+          academic_term_id: values.academic_term_id || null,
+          class_section_id: values.class_section_id,
+          start_date: values.start_date ? dayjs(values.start_date).format('YYYY-MM-DD') : null,
+          end_date: values.end_date ? dayjs(values.end_date).format('YYYY-MM-DD') : null,
+          remarks: values.remarks || null,
+        };
+        await createExam(createPayload);
         message.success('Exam created successfully');
       }
       setModalOpen(false);
@@ -148,8 +180,8 @@ export default function Exams() {
       render: (_, record) => (
         <div style={{ display: 'flex', gap: 8 }}>
           <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)} className="action-btn edit-btn" disabled={record.status === 'cancelled'} />
-          {record.status === 'draft' && <Button type="link" icon={<CheckCircleOutlined />} onClick={() => handlePublish(record.id)} className="action-btn publish-btn" title="Publish" />}
-          {record.status === 'published' && <Button type="link" icon={<StopOutlined />} onClick={() => handleCancel(record.id)} className="action-btn delete-btn" title="Cancel" />}
+          {String(record.status || '').toUpperCase() === 'DRAFT' && <Button type="link" icon={<CheckCircleOutlined />} onClick={() => handlePublish(record.id)} className="action-btn publish-btn" title="Publish" />}
+          {String(record.status || '').toUpperCase() === 'PUBLISHED' && <Button type="link" icon={<StopOutlined />} onClick={() => handleCancel(record.id)} className="action-btn delete-btn" title="Cancel" />}
         </div>
       ),
     },
@@ -178,7 +210,7 @@ export default function Exams() {
             </Col>
             <Col xs={24} sm={12} md={6}>
               <Select placeholder="Class Section" value={filters.class_section_id} onChange={(value) => setFilters({ ...filters, class_section_id: value })} size="large" style={{ width: '100%' }} allowClear>
-                {classSections.map(cs => <Option key={cs.id} value={cs.id}>Class {cs.class_number} - {cs.section_name}</Option>)}
+                {classSections.map(cs => <Option key={cs.id} value={cs.id}>{classSectionLabel(cs)}</Option>)}
               </Select>
             </Col>
             <Col xs={24} sm={12} md={4}>
@@ -199,10 +231,22 @@ export default function Exams() {
           </Form.Item>
           <Form.Item name="exam_type" label="Exam Type" rules={[{ required: true }]}>
             <Select placeholder="Select exam type" size="large">
-              <Option value="Mid-term">Mid-term</Option>
-              <Option value="Final">Final</Option>
-              <Option value="Unit Test">Unit Test</Option>
-              <Option value="Monthly Test">Monthly Test</Option>
+              <Option value="UNIT_TEST">UNIT_TEST</Option>
+              <Option value="MIDTERM">MIDTERM</Option>
+              <Option value="FINAL">FINAL</Option>
+              <Option value="PRACTICAL">PRACTICAL</Option>
+              <Option value="ASSIGNMENT">ASSIGNMENT</Option>
+              <Option value="QUIZ">QUIZ</Option>
+              <Option value="PROJECT">PROJECT</Option>
+              <Option value="OTHER">OTHER</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item name="exam_group" label="Exam Group" initialValue="REGULAR" rules={[{ required: true }]}>
+            <Select placeholder="Select exam group" size="large">
+              <Option value="REGULAR">REGULAR</Option>
+              <Option value="REEXAM">REEXAM</Option>
+              <Option value="SUPPLEMENTARY">SUPPLEMENTARY</Option>
+              <Option value="IMPROVEMENT">IMPROVEMENT</Option>
             </Select>
           </Form.Item>
           <Row gutter={16}>
@@ -214,10 +258,24 @@ export default function Exams() {
               </Form.Item>
             </Col>
             <Col span={12}>
+              <Form.Item name="academic_term_id" label="Academic Term">
+                <Select placeholder="Select term (optional)" size="large" allowClear>
+                  {academicTerms.map(t => <Option key={t.id} value={t.id}>{t.term_name}</Option>)}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
               <Form.Item name="class_section_id" label="Class Section" rules={[{ required: true }]}>
                 <Select placeholder="Select class section" size="large">
-                  {classSections.map(cs => <Option key={cs.id} value={cs.id}>Class {cs.class_number} - {cs.section_name}</Option>)}
+                  {classSections.map(cs => <Option key={cs.id} value={cs.id}>{classSectionLabel(cs)}</Option>)}
                 </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="remarks" label="Remarks">
+                <Input placeholder="Optional remarks" size="large" />
               </Form.Item>
             </Col>
           </Row>
@@ -233,21 +291,6 @@ export default function Exams() {
               </Form.Item>
             </Col>
           </Row>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item name="total_marks" label="Total Marks">
-                <InputNumber min={0} style={{ width: '100%' }} size="large" placeholder="100" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name="passing_marks" label="Passing Marks">
-                <InputNumber min={0} style={{ width: '100%' }} size="large" placeholder="40" />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item name="description" label="Description">
-            <TextArea rows={3} placeholder="Enter description" />
-          </Form.Item>
         </Form>
       </Modal>
     </div>

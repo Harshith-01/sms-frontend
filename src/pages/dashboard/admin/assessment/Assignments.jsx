@@ -3,6 +3,7 @@ import { Table, Button, Modal, Form, Input, message, Card, Select, Tag, Row, Col
 import { PlusOutlined, EditOutlined, SearchOutlined, ReloadOutlined, CheckCircleOutlined, StopOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import { getAssignments, createAssignment, updateAssignment, publishAssignment, closeAssignment, cancelAssignment } from '../../../../services/assessmentService';
 import { getAcademicYears, getClassSections, getSubjects } from '../../../../services/academicService';
+import { getTeachers } from '../../../../services/teacherService';
 import dayjs from 'dayjs';
 import './Assessment.css';
 
@@ -22,6 +23,7 @@ export default function Assignments() {
   const [academicYears, setAcademicYears] = useState([]);
   const [classSections, setClassSections] = useState([]);
   const [subjects, setSubjects] = useState([]);
+  const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
@@ -32,8 +34,14 @@ export default function Assignments() {
     fetchAcademicYears();
     fetchClassSections();
     fetchSubjects();
+    fetchTeachers();
     fetchData();
   }, []);
+
+  const classSectionLabel = (cs) => {
+    const room = cs?.room_number ? ` (${cs.room_number})` : '';
+    return `Class ${cs?.class_id ?? '-'} - Section ${cs?.section_id ?? '-'}${room}`;
+  };
 
   const fetchAcademicYears = async () => {
     try {
@@ -57,6 +65,15 @@ export default function Assignments() {
     try {
       const response = await getSubjects();
       setSubjects(extractRows(response?.data));
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchTeachers = async () => {
+    try {
+      const response = await getTeachers();
+      setTeachers(extractRows(response?.data));
     } catch (error) {
       console.error(error);
     }
@@ -91,16 +108,29 @@ export default function Assignments() {
 
   const handleSubmit = async (values) => {
     try {
-      const payload = {
-        ...values,
-        due_date: values.due_date ? dayjs(values.due_date).format('YYYY-MM-DD') : null,
-      };
-
       if (editingRecord) {
-        await updateAssignment(editingRecord.id, payload);
+        const updatePayload = {
+          title: values.title,
+          description: values.description || null,
+          due_date: values.due_date ? dayjs(values.due_date).format('YYYY-MM-DD') : null,
+          pass_marks: values.pass_marks,
+        };
+        await updateAssignment(editingRecord.id, updatePayload);
         message.success('Assignment updated successfully');
       } else {
-        await createAssignment(payload);
+        const createPayload = {
+          title: values.title,
+          description: values.description || null,
+          academic_year_id: values.academic_year_id,
+          class_section_id: values.class_section_id,
+          subject_id: values.subject_id,
+          assigned_by_teacher_id: values.assigned_by_teacher_id,
+          assigned_date: values.assigned_date ? dayjs(values.assigned_date).format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD'),
+          due_date: values.due_date ? dayjs(values.due_date).format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD'),
+          max_marks: values.max_marks,
+          pass_marks: values.pass_marks,
+        };
+        await createAssignment(createPayload);
         message.success('Assignment created successfully');
       }
       setModalOpen(false);
@@ -168,9 +198,9 @@ export default function Assignments() {
       render: (_, record) => (
         <div style={{ display: 'flex', gap: 8 }}>
           <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)} className="action-btn edit-btn" disabled={record.status === 'cancelled'} />
-          {record.status === 'draft' && <Button type="link" icon={<CheckCircleOutlined />} onClick={() => handlePublish(record.id)} className="action-btn publish-btn" title="Publish" />}
-          {record.status === 'published' && <Button type="link" icon={<CloseCircleOutlined />} onClick={() => handleClose(record.id)} className="action-btn" style={{ color: '#f59e0b' }} title="Close" />}
-          {(record.status === 'draft' || record.status === 'published') && <Button type="link" icon={<StopOutlined />} onClick={() => handleCancel(record.id)} className="action-btn delete-btn" title="Cancel" />}
+          {String(record.status || '').toUpperCase() === 'DRAFT' && <Button type="link" icon={<CheckCircleOutlined />} onClick={() => handlePublish(record.id)} className="action-btn publish-btn" title="Publish" />}
+          {String(record.status || '').toUpperCase() === 'PUBLISHED' && <Button type="link" icon={<CloseCircleOutlined />} onClick={() => handleClose(record.id)} className="action-btn" style={{ color: '#f59e0b' }} title="Close" />}
+          {(String(record.status || '').toUpperCase() === 'DRAFT' || String(record.status || '').toUpperCase() === 'PUBLISHED') && <Button type="link" icon={<StopOutlined />} onClick={() => handleCancel(record.id)} className="action-btn delete-btn" title="Cancel" />}
         </div>
       ),
     },
@@ -199,12 +229,12 @@ export default function Assignments() {
             </Col>
             <Col xs={24} sm={12} md={5}>
               <Select placeholder="Class Section" value={filters.class_section_id} onChange={(value) => setFilters({ ...filters, class_section_id: value })} size="large" style={{ width: '100%' }} allowClear>
-                {classSections.map(cs => <Option key={cs.id} value={cs.id}>Class {cs.class_number} - {cs.section_name}</Option>)}
+                {classSections.map(cs => <Option key={cs.id} value={cs.id}>{classSectionLabel(cs)}</Option>)}
               </Select>
             </Col>
             <Col xs={24} sm={12} md={5}>
               <Select placeholder="Subject" value={filters.subject_id} onChange={(value) => setFilters({ ...filters, subject_id: value })} size="large" style={{ width: '100%' }} allowClear>
-                {subjects.map(s => <Option key={s.id} value={s.id}>{s.name}</Option>)}
+                {subjects.map(s => <Option key={s.id} value={s.id}>{s.subject_name || s.name}</Option>)}
               </Select>
             </Col>
             <Col xs={24} sm={12} md={4}>
@@ -230,18 +260,34 @@ export default function Assignments() {
             <Col span={12}>
               <Form.Item name="subject_id" label="Subject" rules={[{ required: true }]}>
                 <Select placeholder="Select subject" size="large">
-                  {subjects.map(s => <Option key={s.id} value={s.id}>{s.name}</Option>)}
+                  {subjects.map(s => <Option key={s.id} value={s.id}>{s.subject_name || s.name}</Option>)}
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="class_section_id" label="Class Section" rules={[{ required: true }]}>
                 <Select placeholder="Select class section" size="large">
-                  {classSections.map(cs => <Option key={cs.id} value={cs.id}>Class {cs.class_number} - {cs.section_name}</Option>)}
+                  {classSections.map(cs => <Option key={cs.id} value={cs.id}>{classSectionLabel(cs)}</Option>)}
                 </Select>
               </Form.Item>
             </Col>
           </Row>
+          {!editingRecord && (
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item name="assigned_by_teacher_id" label="Assigned By Teacher" rules={[{ required: true }]}>
+                  <Select placeholder="Select teacher" size="large">
+                    {teachers.map(t => <Option key={t.id} value={t.id}>{t.full_name || t.teacher_name || t.id}</Option>)}
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="assigned_date" label="Assigned Date" rules={[{ required: true }]}>
+                  <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" size="large" />
+                </Form.Item>
+              </Col>
+            </Row>
+          )}
           <Row gutter={16}>
             <Col span={8}>
               <Form.Item name="academic_year_id" label="Academic Year" rules={[{ required: true }]}>
@@ -251,25 +297,18 @@ export default function Assignments() {
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item name="total_marks" label="Total Marks">
+              <Form.Item name="max_marks" label="Max Marks" rules={[{ required: !editingRecord }]}>
                 <InputNumber min={0} style={{ width: '100%' }} size="large" placeholder="100" />
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item name="passing_marks" label="Passing Marks">
+              <Form.Item name="pass_marks" label="Pass Marks">
                 <InputNumber min={0} style={{ width: '100%' }} size="large" placeholder="40" />
               </Form.Item>
             </Col>
           </Row>
-          <Form.Item name="due_date" label="Due Date">
+          <Form.Item name="due_date" label="Due Date" rules={[{ required: !editingRecord }]}>
             <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" size="large" />
-          </Form.Item>
-          <Form.Item name="submission_type" label="Submission Type">
-            <Select placeholder="Select submission type" size="large">
-              <Option value="file">File Upload</Option>
-              <Option value="text">Text Submission</Option>
-              <Option value="both">Both</Option>
-            </Select>
           </Form.Item>
         </Form>
       </Modal>

@@ -9,6 +9,19 @@ import './Attendance.css';
 const { Option } = Select;
  
 const weekdayNames = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+const extractRows = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.results)) return payload.results;
+  if (Array.isArray(payload?.items)) return payload.items;
+  return [];
+};
+
+const classSectionLabel = (cs) => {
+  const room = cs?.room_number ? ` (${cs.room_number})` : '';
+  return `Class ${cs?.class_id ?? '-'} - Section ${cs?.section_id ?? '-'}${room}`;
+};
  
 export default function TimetablePeriods() {
   const [data, setData] = useState([]);
@@ -35,9 +48,10 @@ export default function TimetablePeriods() {
   const fetchClassSections = async () => {
     try {
       const response = await getClassSections();
-      setClassSections(response.data || []);
-      if (response.data?.length > 0) {
-        setSelectedClassSection(response.data[0].id);
+      const rows = extractRows(response?.data);
+      setClassSections(rows);
+      if (rows.length > 0) {
+        setSelectedClassSection(rows[0].id);
       }
     } catch (error) {
       message.error('Failed to fetch class sections');
@@ -47,12 +61,13 @@ export default function TimetablePeriods() {
   const fetchAcademicTerms = async () => {
     try {
       const response = await getAcademicTerms();
-      setAcademicTerms(response.data || []);
-      const current = response.data?.find(t => t.is_current);
+      const rows = extractRows(response?.data);
+      setAcademicTerms(rows);
+      const current = rows.find(t => t.is_current);
       if (current) {
         setSelectedAcademicTerm(current.id);
-      } else if (response.data?.length > 0) {
-        setSelectedAcademicTerm(response.data[0].id);
+      } else if (rows.length > 0) {
+        setSelectedAcademicTerm(rows[0].id);
       }
     } catch (error) {
       message.error('Failed to fetch academic terms');
@@ -64,7 +79,7 @@ export default function TimetablePeriods() {
     setLoading(true);
     try {
       const response = await getTimetablePeriods(selectedClassSection, selectedAcademicTerm);
-      setData(response.data || []);
+      setData(extractRows(response?.data));
     } catch (error) {
       message.error('Failed to fetch timetable periods');
     } finally {
@@ -149,7 +164,7 @@ export default function TimetablePeriods() {
             >
               {classSections.map(cs => (
                 <Option key={cs.id} value={cs.id}>
-                  Class {cs.class_number}-{cs.section_name}
+                  {classSectionLabel(cs)}
                 </Option>
               ))}
             </Select>

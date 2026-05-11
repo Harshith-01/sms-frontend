@@ -176,10 +176,18 @@ export const publishReportCards = async (reportCardIds) => {
 export const getStudentReportCards = async (
   studentId,
   page = 1,
-  pageSize = 10
+  pageSize = 10,
+  filters = {}
 ) => {
   return await api.get(`/assessment/report-cards/student/${studentId}`, {
-    params: { page, pageSize },
+    params: {
+      page,
+      page_size: pageSize,
+      ...(filters.academic_year_id ? { academic_year_id: filters.academic_year_id } : {}),
+      ...(filters.academic_term_id ? { academic_term_id: filters.academic_term_id } : {}),
+      ...(filters.class_section_id ? { class_section_id: filters.class_section_id } : {}),
+      ...(filters.report_type ? { report_type: filters.report_type } : {}),
+    },
   });
 };
 
