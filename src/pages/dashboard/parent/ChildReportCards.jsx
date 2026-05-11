@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Table, Button, Empty, Spin, message, Select, Tag } from 'antd';
-import { ArrowLeftOutlined, DownloadOutlined, EyeOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, EyeOutlined } from '@ant-design/icons';
 import { getChildReportCards, getMyChildren } from '../../../services/parentService';
 import './Parent.css';
 
@@ -13,24 +13,28 @@ export default function ChildReportCards() {
   const [reportCards, setReportCards] = useState([]);
   const [children, setChildren] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedChild, setSelectedChild] = useState(studentId);
+  const [selectedChild, setSelectedChild] = useState(studentId || null);
 
   useEffect(() => {
     fetchChildren();
   }, []);
 
   useEffect(() => {
-    if (selectedChild) {
-      fetchReportCards();
+    if (selectedChild && children.length > 0) {
+      const childData = children.find(c => c.student_id === selectedChild);
+      // Check can_view_academics permission before calling API
+      if (childData?.can_view_academics) {
+        fetchReportCards();
+      }
     }
-  }, [selectedChild]);
+  }, [selectedChild, children]);
 
   const fetchChildren = async () => {
     try {
       const response = await getMyChildren();
-      const kids = response.data || [];
+      const kids = Array.isArray(response.data) ? response.data : [];
       setChildren(kids);
-      
+
       if (!studentId && kids.length > 0) {
         const childWithAccess = kids.find(c => c.can_view_academics);
         if (childWithAccess) {
@@ -46,7 +50,7 @@ export default function ChildReportCards() {
     try {
       setLoading(true);
       const response = await getChildReportCards(selectedChild);
-      setReportCards(response.data || []);
+      setReportCards(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       message.error('Failed to load report cards');
     } finally {
@@ -58,21 +62,9 @@ export default function ChildReportCards() {
   const canViewAcademics = selectedChildData?.can_view_academics;
 
   const columns = [
-    {
-      title: 'Academic Year',
-      dataIndex: 'academic_year',
-      key: 'academic_year',
-    },
-    {
-      title: 'Term',
-      dataIndex: 'term',
-      key: 'term',
-    },
-    {
-      title: 'Class',
-      dataIndex: 'class_name',
-      key: 'class_name',
-    },
+    { title: 'Academic Year', dataIndex: 'academic_year', key: 'academic_year' },
+    { title: 'Term', dataIndex: 'term', key: 'term' },
+    { title: 'Class', dataIndex: 'class_name', key: 'class_name' },
     {
       title: 'Overall Grade',
       dataIndex: 'overall_grade',
@@ -90,9 +82,7 @@ export default function ChildReportCards() {
       dataIndex: 'status',
       key: 'status',
       render: (status) => (
-        <Tag color={status === 'PUBLISHED' ? 'green' : 'orange'}>
-          {status}
-        </Tag>
+        <Tag color={status === 'PUBLISHED' ? 'green' : 'orange'}>{status}</Tag>
       ),
     },
     {
@@ -106,12 +96,10 @@ export default function ChildReportCards() {
     },
   ];
 
-  if (!canViewAcademics) {
+  if (children.length > 0 && selectedChild && canViewAcademics === false) {
     return (
       <Card>
-        <Empty
-          description="You don't have permission to view report cards for this child"
-        >
+        <Empty description="You don't have permission to view report cards for this child">
           <Button onClick={() => navigate('/parent/children')}>
             Back to My Children
           </Button>
@@ -124,10 +112,7 @@ export default function ChildReportCards() {
     <div className="child-report-cards-container">
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>Report Cards</h2>
-        <Button 
-          icon={<ArrowLeftOutlined />} 
-          onClick={() => navigate('/parent/children')}
-        >
+        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/parent/children')}>
           Back
         </Button>
       </div>
@@ -163,7 +148,7 @@ export default function ChildReportCards() {
           <Table
             columns={columns}
             dataSource={reportCards}
-            rowKey="id"
+            rowKey={(r, i) => r.id ?? i}
             pagination={{ pageSize: 10 }}
           />
         )}

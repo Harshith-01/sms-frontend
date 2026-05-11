@@ -5,6 +5,16 @@ import { getStudents } from '../../../../services/studentService';
 
 const { Option } = Select;
 
+// Safe array extractor
+const toArray = (res) => {
+  const d = res?.data;
+  if (Array.isArray(d)) return d;
+  if (Array.isArray(d?.items)) return d.items;
+  if (Array.isArray(d?.results)) return d.results;
+  if (Array.isArray(d?.data)) return d.data;
+  return [];
+};
+
 export default function LinkStudentModal({ visible, parentId, onClose, onSuccess }) {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -21,7 +31,7 @@ export default function LinkStudentModal({ visible, parentId, onClose, onSuccess
     try {
       setLoadingStudents(true);
       const response = await getStudents();
-      setStudents(response.data || []);
+      setStudents(toArray(response));
     } catch (error) {
       message.error('Failed to load students');
     } finally {
@@ -33,7 +43,8 @@ export default function LinkStudentModal({ visible, parentId, onClose, onSuccess
     try {
       const values = await form.validateFields();
       setLoading(true);
-      
+
+      // Payload matches POST /parents/{parent_id}/link-student DTO exactly
       const data = {
         student_id: values.student_id,
         relationship_type: values.relationship_type,
@@ -51,7 +62,8 @@ export default function LinkStudentModal({ visible, parentId, onClose, onSuccess
       if (error.errorFields) {
         message.error('Please fill all required fields');
       } else {
-        message.error(error.response?.data?.detail || 'Failed to link student');
+        const detail = error.response?.data?.detail;
+        message.error(typeof detail === 'string' ? detail : 'Failed to link student');
       }
     } finally {
       setLoading(false);
@@ -97,12 +109,12 @@ export default function LinkStudentModal({ visible, parentId, onClose, onSuccess
             }
           >
             {students.map((student) => (
-              <Option 
-                key={student.id} 
-                value={student.id}
-                label={`${student.full_name} (${student.id})`}
+              <Option
+                key={student.student_id}
+                value={student.student_id}
+                label={`${student.full_name} (${student.student_id})`}
               >
-                {student.full_name} - {student.id}
+                {student.full_name} - {student.student_id}
               </Option>
             ))}
           </Select>

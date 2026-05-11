@@ -56,6 +56,11 @@ import AddStaff from '../pages/dashboard/admin/staff/AddStaff';
 import StaffDetails from '../pages/dashboard/admin/staff/StaffDetails';
 import BulkUploadStaff from '../pages/dashboard/admin/staff/BulkUploadStaff';
 
+// 🆕 Document Management Pages - Admin
+import StudentDocuments from '../pages/dashboard/admin/documents/StudentDocuments';
+import TeacherDocuments from '../pages/dashboard/admin/documents/TeacherDocuments';
+import PendingVerifications from '../pages/dashboard/admin/documents/PendingVerifications';
+
 // Parent Dashboard Pages
 import ParentDashboard from '../pages/dashboard/parent/ParentDashboard';
 import MyProfile from '../pages/dashboard/parent/MyProfile';
@@ -87,10 +92,18 @@ import StudentExams from '../pages/dashboard/student/StudentExams';
 import StudentReportCards from '../pages/dashboard/student/StudentReportCards';
 import StudentFeeStatus from '../pages/dashboard/student/StudentFeeStatus';
 
+// 🆕 Student Document Pages
+import StudentMyDocuments from '../pages/dashboard/student/documents/MyDocuments';
+import StudentUploadDocument from '../pages/dashboard/student/documents/UploadDocument';
+
 // Teacher Pages
 import TeacherAssignments from '../pages/dashboard/teacher/TeacherAssignments';
 import TeacherExams from '../pages/dashboard/teacher/TeacherExams';
 import TeacherGrading from '../pages/dashboard/teacher/TeacherGrading';
+
+// 🆕 Teacher Document Pages
+import TeacherMyDocuments from '../pages/dashboard/teacher/documents/MyDocuments';
+import TeacherUploadDocument from '../pages/dashboard/teacher/documents/UploadDocument';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -164,6 +177,11 @@ export default function AppRoutes() {
         <Route path="staff/bulk-upload" element={<BulkUploadStaff />} />
         <Route path="staff/:id" element={<StaffDetails />} />
 
+        {/* 🆕 Documents Management */}
+        <Route path="documents/students" element={<StudentDocuments />} />
+        <Route path="documents/teachers" element={<TeacherDocuments />} />
+        <Route path="documents/pending" element={<PendingVerifications />} />
+
         {/* Academic Management */}
         <Route path="academic/academic-years" element={<AcademicYears />} />
         <Route path="academic/departments" element={<Departments />} />
@@ -211,6 +229,10 @@ export default function AppRoutes() {
         <Route path="exams" element={<TeacherExams />} />
         <Route path="grading" element={<TeacherGrading />} />
         
+        {/* 🆕 Teacher Documents */}
+        <Route path="documents" element={<TeacherMyDocuments />} />
+        <Route path="documents/upload" element={<TeacherUploadDocument />} />
+        
         {/* Attendance */}
         <Route path="attendance/mark" element={<MarkAttendance />} />
         <Route path="attendance/sessions" element={<AttendanceSessions />} />
@@ -233,6 +255,10 @@ export default function AppRoutes() {
         <Route path="exams" element={<StudentExams />} />
         <Route path="report-cards" element={<StudentReportCards />} />
         <Route path="fees" element={<StudentFeeStatus />} />
+        
+        {/* 🆕 Student Documents */}
+        <Route path="documents" element={<StudentMyDocuments />} />
+        <Route path="documents/upload" element={<StudentUploadDocument />} />
         
         {/* Attendance */}
         <Route path="attendance" element={<MyAttendance />} />

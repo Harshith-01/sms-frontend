@@ -30,8 +30,7 @@ export default function StaffDashboard() {
     if (!joiningDate) return 0;
     const start = new Date(joiningDate);
     const today = new Date();
-    const years = today.getFullYear() - start.getFullYear();
-    return years;
+    return today.getFullYear() - start.getFullYear();
   };
 
   if (loading) {

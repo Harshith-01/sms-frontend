@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Card, Row, Col, Statistic, Avatar, List, Tag, Button, Spin } from 'antd';
-import { 
-  UserOutlined, 
-  CheckCircleOutlined, 
+import {
+  UserOutlined,
+  CheckCircleOutlined,
   ClockCircleOutlined,
   FileDoneOutlined,
   CalendarOutlined,
@@ -26,7 +26,7 @@ export default function ParentDashboard() {
     try {
       setLoading(true);
       const response = await getMyChildren();
-      setChildren(response.data || []);
+      setChildren(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Failed to load children:', error);
     } finally {
@@ -40,20 +40,14 @@ export default function ParentDashboard() {
   };
 
   const getRelationshipColor = (type) => {
-    const colors = {
-      FATHER: 'blue',
-      MOTHER: 'pink',
-      GUARDIAN: 'green',
-      STEP_PARENT: 'purple',
-      OTHER: 'orange'
-    };
+    const colors = { FATHER: 'blue', MOTHER: 'pink', GUARDIAN: 'green', STEP_PARENT: 'purple', OTHER: 'orange' };
     return colors[type] || 'default';
   };
 
   return (
     <div className="parent-dashboard-container">
       <h2>Parent Dashboard</h2>
-      
+
       {/* Welcome Section */}
       <Card className="welcome-card" style={{ marginBottom: 24 }}>
         <Row align="middle" justify="space-between">
@@ -62,11 +56,7 @@ export default function ParentDashboard() {
             <p>Here's an overview of your children's academic progress</p>
           </Col>
           <Col>
-            <Button 
-              type="primary" 
-              icon={<UserOutlined />}
-              onClick={() => navigate('/parent/profile')}
-            >
+            <Button type="primary" icon={<UserOutlined />} onClick={() => navigate('/parent/profile')}>
               My Profile
             </Button>
           </Col>
@@ -121,14 +111,10 @@ export default function ParentDashboard() {
       </Row>
 
       {/* Children List */}
-      <Card 
-        title="My Children" 
+      <Card
+        title="My Children"
         extra={
-          <Button 
-            type="link" 
-            icon={<ArrowRightOutlined />}
-            onClick={() => navigate('/parent/children')}
-          >
+          <Button type="link" icon={<ArrowRightOutlined />} onClick={() => navigate('/parent/children')}>
             View All
           </Button>
         }
@@ -150,9 +136,9 @@ export default function ParentDashboard() {
             renderItem={(child) => (
               <List.Item
                 actions={[
-                  <Button 
-                    type="link" 
-                    onClick={() => navigate(`/parent/children/${child.student_id}`)}
+                  <Button
+                    type="link"
+                    onClick={() => navigate('/parent/children')}
                   >
                     View Details
                   </Button>
@@ -160,10 +146,7 @@ export default function ParentDashboard() {
               >
                 <List.Item.Meta
                   avatar={
-                    <Avatar 
-                      size={64} 
-                      style={{ backgroundColor: '#1890ff' }}
-                    >
+                    <Avatar size={64} style={{ backgroundColor: '#1890ff' }}>
                       {getInitials(child.full_name)}
                     </Avatar>
                   }
@@ -207,20 +190,13 @@ export default function ParentDashboard() {
       <Card title="Quick Actions" style={{ marginTop: 24 }}>
         <Row gutter={[16, 16]}>
           <Col xs={24} sm={12} md={6}>
-            <Button 
-              block 
-              size="large" 
-              icon={<UserOutlined />}
-              onClick={() => navigate('/parent/children')}
-            >
+            <Button block size="large" icon={<UserOutlined />} onClick={() => navigate('/parent/children')}>
               My Children
             </Button>
           </Col>
           <Col xs={24} sm={12} md={6}>
-            <Button 
-              block 
-              size="large" 
-              icon={<ClockCircleOutlined />}
+            <Button
+              block size="large" icon={<ClockCircleOutlined />}
               onClick={() => navigate('/parent/children')}
               disabled={children.length === 0}
             >
@@ -228,10 +204,8 @@ export default function ParentDashboard() {
             </Button>
           </Col>
           <Col xs={24} sm={12} md={6}>
-            <Button 
-              block 
-              size="large" 
-              icon={<TrophyOutlined />}
+            <Button
+              block size="large" icon={<TrophyOutlined />}
               onClick={() => navigate('/parent/children')}
               disabled={children.length === 0}
             >
@@ -239,12 +213,7 @@ export default function ParentDashboard() {
             </Button>
           </Col>
           <Col xs={24} sm={12} md={6}>
-            <Button 
-              block 
-              size="large" 
-              icon={<CalendarOutlined />}
-              onClick={() => navigate('/parent/meetings')}
-            >
+            <Button block size="large" icon={<CalendarOutlined />} onClick={() => navigate('/parent/meetings')}>
               Request Meeting
             </Button>
           </Col>

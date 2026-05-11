@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card, Table, Select, Button, message, Empty, Spin } from 'antd';
 import { CalendarOutlined, ReloadOutlined } from '@ant-design/icons';
-import { getSchoolTimetable } from '../../../services/staffService';
+import { getMyTimetable } from '../../../services/staffService';
 import './Staff.css';
 
 const { Option } = Select;
@@ -20,13 +20,16 @@ export default function SchoolTimetable() {
 
     try {
       setLoading(true);
-      const response = await getSchoolTimetable({
+      // GET /staff/me/timetable with query params
+      const response = await getMyTimetable({
         class_section_id: classSectionId,
-        academic_term_id: academicTermId
+        academic_term_id: academicTermId,
       });
-      setTimetable(response.data || []);
+      const d = response.data;
+      setTimetable(Array.isArray(d) ? d : d?.items || d?.results || []);
     } catch (error) {
       message.error('Failed to load timetable');
+      setTimetable([]);
     } finally {
       setLoading(false);
     }
@@ -138,7 +141,7 @@ export default function SchoolTimetable() {
           <Table
             columns={columns}
             dataSource={timetable}
-            rowKey="id"
+            rowKey={(r, i) => r.id ?? i}
             pagination={false}
           />
         )}

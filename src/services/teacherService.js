@@ -1,62 +1,72 @@
 import { createAPI } from "./api";
 
-// ✅ Connect to Teacher Microservice
 const api = createAPI(import.meta.env.VITE_TEACHER_SERVICE);
 
 // ==================== TEACHERS ====================
 
-// Get teachers
-export const getTeachers = async (filters = {}) => {
-  return api.get("/teachers", {
-    params: filters,
-  });
-};
+export const getTeachers = async (filters = {}) =>
+  api.get("/teachers", { params: filters });
 
-// Get teacher by ID
-export const getTeacherById = async (id) => {
-  return api.get(`/teachers/${id}`);
-};
+export const getTeacherById = async (teacher_id) =>
+  api.get(`/teachers/${teacher_id}`);
 
-// Get logged-in teacher profile
-export const getTeacherProfile = () => {
-  return api.get("/teachers/me");
-};
+// GET /teachers/me — logged-in teacher profile
+export const getTeacherProfile = () =>
+  api.get("/teachers/me");
 
-// Create teacher
-export const createTeacher = async (data) => {
-  return api.post("/teachers", data);
-};
+// GET /teachers/me/assessment-workload
+// Response: { teacher_id, assessment_workload: { integration_enabled, assigned_assignments, evaluated_exam_subjects } }
+export const getTeacherWorkload = () =>
+  api.get("/teachers/me/assessment-workload");
 
-// Update teacher
-export const updateTeacher = async (id, data) => {
-  return api.put(`/teachers/${id}`, data);
-};
+export const getTeacherCount = () =>
+  api.get("/teachers/count");
 
-// Delete teacher
-export const deleteTeacher = async (id) => {
-  return api.delete(`/teachers/${id}`);
-};
+export const createTeacher = async (data) =>
+  api.post("/teachers", data);
 
-// Bulk upload
+// PUT /teachers/{teacher_id}/details
+export const updateTeacher = async (teacher_id, data) =>
+  api.put(`/teachers/${teacher_id}/details`, data);
+
+export const deleteTeacher = async (teacher_id, hard = false) =>
+  api.delete(`/teachers/${teacher_id}`, { params: hard ? { hard: true } : {} });
+
 export const bulkUploadTeachers = async (file) => {
   const formData = new FormData();
   formData.append("file", file);
-
   return api.post("/teachers/bulk", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+    headers: { "Content-Type": "multipart/form-data" },
   });
 };
+
+// ==================== QUALIFICATIONS ====================
+
+export const addQualification = async (teacher_id, data) =>
+  api.post(`/teachers/${teacher_id}/qualification`, data);
+
+export const updateQualification = async (teacher_id, qualification_id, data) =>
+  api.put(`/teachers/${teacher_id}/qualification/${qualification_id}`, data);
+
+export const deleteQualification = async (teacher_id, qualification_id) =>
+  api.delete(`/teachers/${teacher_id}/qualification/${qualification_id}`);
+
+// ==================== ACADEMICS ====================
+
+export const addAcademic = async (teacher_id, data) =>
+  api.post(`/teachers/${teacher_id}/academic`, data);
+
+export const updateAcademic = async (teacher_id, academic_id, data) =>
+  api.put(`/teachers/${teacher_id}/academic/${academic_id}`, data);
+
+export const deleteAcademic = async (teacher_id, academic_id) =>
+  api.delete(`/teachers/${teacher_id}/academic/${academic_id}`);
 
 // ==================== EXPORT ====================
 
 export default {
-  getTeachers,
-  getTeacherById,
-  getTeacherProfile,
-  createTeacher,
-  updateTeacher,
-  deleteTeacher,
-  bulkUploadTeachers,
+  getTeachers, getTeacherById, getTeacherProfile, getTeacherWorkload,
+  getTeacherCount, createTeacher, updateTeacher, deleteTeacher,
+  bulkUploadTeachers, addQualification, updateQualification, deleteQualification,
+  addAcademic, updateAcademic, deleteAcademic,
 };

@@ -15,11 +15,31 @@ export default function AddParent() {
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
-      await createParent(values);
+      // Explicit payload — DTO has extra="forbid", only send allowed fields
+      const payload = {
+        email: values.email,
+        primary_contact: values.primary_contact,
+        father_name: values.father_name || null,
+        mother_name: values.mother_name || null,
+        guardian_name: values.guardian_name || null,
+        secondary_contact: values.secondary_contact || null,
+        guardian_contact: values.guardian_contact || null,
+        guardian_email: values.guardian_email || null,
+        address: values.address || null,
+        permanent_address: values.permanent_address || null,
+        occupation: values.occupation || null,
+        annual_income: values.annual_income || null,
+      };
+      await createParent(payload);
       message.success('Parent created successfully');
       navigate('/admin/parents');
     } catch (error) {
-      message.error(error.response?.data?.detail || 'Failed to create parent');
+      const detail = error.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        detail.forEach(e => message.error(`${e.loc?.slice(1).join('.')} — ${e.msg}`));
+      } else {
+        message.error(typeof detail === 'string' ? detail : 'Failed to create parent');
+      }
     } finally {
       setLoading(false);
     }
@@ -39,35 +59,21 @@ export default function AddParent() {
           </Col>
         </Row>
 
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-          autoComplete="off"
-        >
+        <Form form={form} layout="vertical" onFinish={handleSubmit} autoComplete="off">
           <Divider orientation="left">Personal Information</Divider>
           <Row gutter={16}>
             <Col xs={24} md={8}>
-              <Form.Item
-                name="father_name"
-                label="Father's Name"
-              >
+              <Form.Item name="father_name" label="Father's Name">
                 <Input prefix={<UserOutlined />} placeholder="Enter father's name" />
               </Form.Item>
             </Col>
             <Col xs={24} md={8}>
-              <Form.Item
-                name="mother_name"
-                label="Mother's Name"
-              >
+              <Form.Item name="mother_name" label="Mother's Name">
                 <Input prefix={<UserOutlined />} placeholder="Enter mother's name" />
               </Form.Item>
             </Col>
             <Col xs={24} md={8}>
-              <Form.Item
-                name="guardian_name"
-                label="Guardian's Name"
-              >
+              <Form.Item name="guardian_name" label="Guardian's Name">
                 <Input prefix={<UserOutlined />} placeholder="Enter guardian's name" />
               </Form.Item>
             </Col>
@@ -91,9 +97,7 @@ export default function AddParent() {
               <Form.Item
                 name="secondary_contact"
                 label="Secondary Contact"
-                rules={[
-                  { pattern: /^[0-9]{10}$/, message: 'Enter valid 10-digit phone number' }
-                ]}
+                rules={[{ pattern: /^[0-9]{10}$/, message: 'Enter valid 10-digit phone number' }]}
               >
                 <Input prefix={<PhoneOutlined />} placeholder="10-digit phone number" />
               </Form.Item>
@@ -102,9 +106,7 @@ export default function AddParent() {
               <Form.Item
                 name="guardian_contact"
                 label="Guardian Contact"
-                rules={[
-                  { pattern: /^[0-9]{10}$/, message: 'Enter valid 10-digit phone number' }
-                ]}
+                rules={[{ pattern: /^[0-9]{10}$/, message: 'Enter valid 10-digit phone number' }]}
               >
                 <Input prefix={<PhoneOutlined />} placeholder="10-digit phone number" />
               </Form.Item>
@@ -128,9 +130,7 @@ export default function AddParent() {
               <Form.Item
                 name="guardian_email"
                 label="Guardian Email"
-                rules={[
-                  { type: 'email', message: 'Enter valid email address' }
-                ]}
+                rules={[{ type: 'email', message: 'Enter valid email address' }]}
               >
                 <Input prefix={<MailOutlined />} placeholder="guardian@example.com" />
               </Form.Item>
@@ -140,18 +140,12 @@ export default function AddParent() {
           <Divider orientation="left">Address Information</Divider>
           <Row gutter={16}>
             <Col xs={24} md={12}>
-              <Form.Item
-                name="address"
-                label="Current Address"
-              >
+              <Form.Item name="address" label="Current Address">
                 <TextArea rows={3} placeholder="Enter current residential address" />
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
-              <Form.Item
-                name="permanent_address"
-                label="Permanent Address"
-              >
+              <Form.Item name="permanent_address" label="Permanent Address">
                 <TextArea rows={3} placeholder="Enter permanent address" />
               </Form.Item>
             </Col>
@@ -160,18 +154,12 @@ export default function AddParent() {
           <Divider orientation="left">Other Information</Divider>
           <Row gutter={16}>
             <Col xs={24} md={12}>
-              <Form.Item
-                name="occupation"
-                label="Occupation"
-              >
+              <Form.Item name="occupation" label="Occupation">
                 <Input placeholder="Enter occupation" />
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
-              <Form.Item
-                name="annual_income"
-                label="Annual Income"
-              >
+              <Form.Item name="annual_income" label="Annual Income">
                 <Input placeholder="e.g., 500000-1000000" />
               </Form.Item>
             </Col>

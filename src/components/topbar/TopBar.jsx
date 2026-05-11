@@ -1,21 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Input, Badge, Avatar, Dropdown, Spin } from 'antd';
-import {
-  SearchOutlined,
-  BellOutlined,
-  UserOutlined,
-  LogoutOutlined,
-  DownOutlined,
-} from '@ant-design/icons';
+import { SearchOutlined, BellOutlined, UserOutlined, LogoutOutlined, DownOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { getStudentProfile, getTeacherProfile } from '../../services/profileService';
+import { getProfilePhoto } from '../../services/documentService';
 import './TopBar.css';
 
 export default function TopBar() {
   const navigate = useNavigate();
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-
   const userRole = localStorage.getItem('userRole');
 
   useEffect(() => {
@@ -25,40 +19,68 @@ export default function TopBar() {
   const fetchUserProfile = async () => {
     setLoading(true);
     try {
-      let response;
+      let profilePhotoUrl = null;
       
-      // Fetch based on role using profileService
       if (userRole === 'STUDENT') {
-        response = await getStudentProfile();
+        const response = await getStudentProfile();
+        const studentData = response.data.basic || response.data;
+        
+        // Get entity ID and fetch profile photo
+        if (studentData?.id) {
+          try {
+            profilePhotoUrl = await getProfilePhoto('student', studentData.id);
+          } catch (error) {
+            console.log('No profile photo');
+          }
+        }
+        
         setUserProfile({
-          name: response.data.basic?.full_name || 'Student',
-          photo: response.data.basic?.photo_url || null,
+          name: studentData?.full_name || 'Student',
+          photo: profilePhotoUrl,
           role: 'Student',
+          entityId: studentData?.id,
         });
       } else if (userRole === 'TEACHER') {
-        response = await getTeacherProfile();
+        const response = await getTeacherProfile();
+        
+        // Get entity ID and fetch profile photo
+        if (response.data?.id) {
+          try {
+            profilePhotoUrl = await getProfilePhoto('teacher', response.data.id);
+          } catch (error) {
+            console.log('No profile photo');
+          }
+        }
+        
         setUserProfile({
           name: response.data.full_name || 'Teacher',
-          photo: response.data.photo_url || null,
+          photo: profilePhotoUrl,
           role: 'Teacher',
+          entityId: response.data?.id,
         });
       } else if (userRole === 'ADMIN') {
-        // Admin uses stored data from registration
-        const userEmail = localStorage.getItem('userEmail') || 'admin@school.com';
-        const userName = localStorage.getItem('userName') || 'Admin';
         setUserProfile({
-          name: userName,
+          name: localStorage.getItem('userName') || 'Admin',
           photo: null,
           role: 'Administrator',
         });
+      } else if (userRole === 'PARENT') {
+        setUserProfile({
+          name: localStorage.getItem('userName') || 'Parent',
+          photo: null,
+          role: 'Parent',
+        });
+      } else if (userRole === 'NON_TEACHING_STAFF') {
+        setUserProfile({
+          name: localStorage.getItem('userName') || 'Staff',
+          photo: null,
+          role: 'Staff',
+        });
       }
     } catch (error) {
-      console.error('Failed to fetch user profile:', error);
-      // Fallback to stored data
-      const userEmail = localStorage.getItem('userEmail') || 'User';
-      const userName = localStorage.getItem('userName') || userEmail.split('@')[0];
+      console.error('Failed to fetch profile:', error);
       setUserProfile({
-        name: userName,
+        name: localStorage.getItem('userName') || 'User',
         photo: null,
         role: userRole || 'User',
       });
@@ -73,35 +95,23 @@ export default function TopBar() {
       navigate('/login', { replace: true });
     } else if (e.key === 'profile') {
       switch (userRole) {
-        case 'TEACHER':
-          navigate('/teacher/profile');
-          break;
-        case 'STUDENT':
-          navigate('/student/profile');
-          break;
-        default:
-          console.log('Admin profile not implemented yet');
+        case 'TEACHER': navigate('/teacher/profile'); break;
+        case 'STUDENT': navigate('/student/profile'); break;
+        case 'PARENT': navigate('/parent/profile'); break;
+        case 'NON_TEACHING_STAFF': navigate('/staff/profile'); break;
+        default: console.log('Profile not available');
       }
     }
   };
 
   const getUserMenuItems = () => {
-    const baseMenu = [];
-    if (userRole === 'TEACHER' || userRole === 'STUDENT') {
-      baseMenu.push({
-        key: 'profile',
-        icon: <UserOutlined />,
-        label: 'Profile',
-      });
-      baseMenu.push({ type: 'divider' });
+    const items = [];
+    if (['TEACHER', 'STUDENT', 'PARENT', 'NON_TEACHING_STAFF'].includes(userRole)) {
+      items.push({ key: 'profile', icon: <UserOutlined />, label: 'Profile' });
+      items.push({ type: 'divider' });
     }
-    baseMenu.push({
-      key: 'logout',
-      icon: <LogoutOutlined />,
-      label: 'Logout',
-      danger: true,
-    });
-    return baseMenu;
+    items.push({ key: 'logout', icon: <LogoutOutlined />, label: 'Logout', danger: true });
+    return items;
   };
 
   const getAvatarUrl = () => {
@@ -122,9 +132,7 @@ export default function TopBar() {
       </div>
       <div className="topbar-actions">
         <Badge count={5} offset={[-2, 2]}>
-          <div className="topbar-notification">
-            <BellOutlined />
-          </div>
+          <div className="topbar-notification"><BellOutlined /></div>
         </Badge>
         <Badge count={3} offset={[-2, 2]}>
           <div className="topbar-notification">
@@ -134,9 +142,7 @@ export default function TopBar() {
           </div>
         </Badge>
         {loading ? (
-          <div className="topbar-user-loading">
-            <Spin size="small" />
-          </div>
+          <div className="topbar-user-loading"><Spin size="small" /></div>
         ) : (
           <Dropdown menu={{ items: getUserMenuItems(), onClick: handleMenuClick }} trigger={['click']} placement="bottomRight">
             <div className="topbar-user-dropdown">

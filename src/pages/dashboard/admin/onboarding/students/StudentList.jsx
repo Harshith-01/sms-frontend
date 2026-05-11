@@ -36,8 +36,9 @@ export default function StudentList() {
   const [loading, setLoading] = useState(false);
   const [bulkModal, setBulkModal] = useState(false);
   const [uploading, setUploading] = useState(false);
+
   const [filters, setFilters] = useState({
-    name: '',
+    full_name: '',
     admission_number: '',
     class_id: '',
     section_id: '',
@@ -51,8 +52,13 @@ export default function StudentList() {
   const fetchStudents = async () => {
     setLoading(true);
     try {
-      const response = await getStudents(filters);
-      setStudents(response.data);
+      const cleanFilters = Object.fromEntries(
+        Object.entries(filters).filter(([_, value]) => value !== '' && value !== null)
+      );
+
+      const response = await getStudents(cleanFilters);
+
+      setStudents(response.data?.results || response.data || []);
     } catch (error) {
       message.error('Failed to fetch students');
     } finally {
@@ -60,9 +66,9 @@ export default function StudentList() {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (student_id) => {
     try {
-      await deleteStudent(id);
+      await deleteStudent(student_id);
       message.success('Student deleted successfully');
       fetchStudents();
     } catch (error) {
@@ -85,8 +91,10 @@ export default function StudentList() {
   };
 
   const downloadTemplate = () => {
-    const csvContent = 'admission_number,full_name,email,dob,gender,nationality,blood_group,aadhaar_number\n' +
-                       'ADM001,John Doe,john@example.com,2010-01-01,Male,Indian,O+,123456789012';
+    const csvContent =
+      'admission_number,full_name,email,contact_number,parent_contact\n' +
+      'ADM001,John Doe,john@example.com,9876543210,9876543211';
+
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -143,7 +151,9 @@ export default function StudentList() {
       key: 'academic_status',
       width: 120,
       render: (text) => (
-        <Tag color={text === 'Active' ? 'green' : 'red'}>{text || 'N/A'}</Tag>
+        <Tag color={text === 'Active' ? 'green' : 'red'}>
+          {text || 'N/A'}
+        </Tag>
       ),
     },
     {
@@ -156,27 +166,22 @@ export default function StudentList() {
           <Button
             type="link"
             icon={<EyeOutlined />}
-            onClick={() => navigate(`/admin/onboarding/students/${record.student_id}`)}
-            className="action-btn view-btn"
+            onClick={() =>
+              navigate(`/admin/onboarding/students/${record.student_id}`)
+            }
           />
           <Button
             type="link"
             icon={<EditOutlined />}
-            onClick={() => navigate(`/admin/onboarding/students/${record.student_id}/edit`)}
-            className="action-btn edit-btn"
+            onClick={() =>
+              navigate(`/admin/onboarding/students/${record.student_id}/edit`)
+            }
           />
           <Popconfirm
             title="Delete this student?"
             onConfirm={() => handleDelete(record.student_id)}
-            okText="Yes"
-            cancelText="No"
           >
-            <Button
-              type="link"
-              icon={<DeleteOutlined />}
-              className="action-btn delete-btn"
-              danger
-            />
+            <Button type="link" icon={<DeleteOutlined />} danger />
           </Popconfirm>
         </Space>
       ),
@@ -190,6 +195,7 @@ export default function StudentList() {
           <h1 className="page-title">Student Management</h1>
           <p className="page-subtitle">Manage all students</p>
         </div>
+
         <Space>
           <Button
             icon={<CloudUploadOutlined />}
@@ -198,11 +204,14 @@ export default function StudentList() {
           >
             Bulk Upload
           </Button>
+
           <Button
             type="primary"
             icon={<PlusOutlined />}
             size="large"
-            onClick={() => navigate('/admin/onboarding/students/add')}
+            onClick={() =>
+              navigate('/admin/onboarding/students/add')
+            }
           >
             Add Student
           </Button>
@@ -214,73 +223,81 @@ export default function StudentList() {
           <Col xs={24} sm={12} md={6}>
             <Input
               placeholder="Search by name"
-              value={filters.name}
-              onChange={(e) => setFilters({ ...filters, name: e.target.value })}
+              value={filters.full_name}
+              onChange={(e) =>
+                setFilters({ ...filters, full_name: e.target.value })
+              }
               size="large"
               allowClear
             />
           </Col>
+
           <Col xs={24} sm={12} md={6}>
             <Input
               placeholder="Admission Number"
               value={filters.admission_number}
-              onChange={(e) => setFilters({ ...filters, admission_number: e.target.value })}
+              onChange={(e) =>
+                setFilters({ ...filters, admission_number: e.target.value })
+              }
               size="large"
               allowClear
             />
           </Col>
+
           <Col xs={24} sm={12} md={4}>
             <Select
               placeholder="Class"
               value={filters.class_id || undefined}
-              onChange={(value) => setFilters({ ...filters, class_id: value })}
+              onChange={(value) =>
+                setFilters({ ...filters, class_id: value })
+              }
               size="large"
               allowClear
               style={{ width: '100%' }}
             >
               <Option value="1">Class 1</Option>
               <Option value="2">Class 2</Option>
-              <Option value="3">Class 3</Option>
-              <Option value="4">Class 4</Option>
-              <Option value="5">Class 5</Option>
-              <Option value="6">Class 6</Option>
-              <Option value="7">Class 7</Option>
-              <Option value="8">Class 8</Option>
-              <Option value="9">Class 9</Option>
-              <Option value="10">Class 10</Option>
             </Select>
           </Col>
+
           <Col xs={24} sm={12} md={4}>
             <Select
               placeholder="Section"
               value={filters.section_id || undefined}
-              onChange={(value) => setFilters({ ...filters, section_id: value })}
+              onChange={(value) =>
+                setFilters({ ...filters, section_id: value })
+              }
               size="large"
               allowClear
               style={{ width: '100%' }}
             >
               <Option value="A">A</Option>
               <Option value="B">B</Option>
-              <Option value="C">C</Option>
             </Select>
           </Col>
+
           <Col xs={24} sm={12} md={4}>
             <Space>
               <Button
                 type="primary"
                 icon={<SearchOutlined />}
                 onClick={fetchStudents}
-                size="large"
               >
                 Search
               </Button>
+
               <Button
                 icon={<ReloadOutlined />}
                 onClick={() => {
-                  setFilters({ name: '', admission_number: '', class_id: '', section_id: '', academic_year: '' });
+                  setFilters({
+                    full_name: '',
+                    admission_number: '',
+                    class_id: '',
+                    section_id: '',
+                    academic_year: '',
+                  });
                   setTimeout(fetchStudents, 100);
                 }}
-                size="large"
               >
                 Reset
               </Button>
@@ -295,12 +312,6 @@ export default function StudentList() {
           dataSource={students}
           rowKey="student_id"
           loading={loading}
-          scroll={{ x: 1200 }}
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showTotal: (total) => `Total ${total} students`,
-          }}
         />
       </Card>
 
@@ -310,20 +321,16 @@ export default function StudentList() {
         onCancel={() => setBulkModal(false)}
         footer={null}
       >
-        <Space direction="vertical" style={{ width: '100%' }} size="large">
-          <Button icon={<DownloadOutlined />} block onClick={downloadTemplate}>
+        <Space direction="vertical" style={{ width: '100%' }}>
+          <Button onClick={downloadTemplate}>
             Download Template
           </Button>
+
           <Upload.Dragger
-            accept=".xlsx,.xls,.csv"
             customRequest={handleBulkUpload}
             showUploadList={false}
           >
-            <p className="ant-upload-drag-icon">
-              <CloudUploadOutlined />
-            </p>
-            <p className="ant-upload-text">Click or drag file to upload</p>
-            <p className="ant-upload-hint">Supports: .xlsx, .xls, .csv</p>
+            <p>Upload Excel file</p>
           </Upload.Dragger>
         </Space>
       </Modal>

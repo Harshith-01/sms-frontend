@@ -4,6 +4,15 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutli
 import { getSections, createSection, updateSection, deleteSection } from '../../../../services/academicService';
 import './Academic.css';
 
+const toArray = (res) => {
+  const d = res?.data;
+  if (Array.isArray(d)) return d;
+  if (Array.isArray(d?.items)) return d.items;
+  if (Array.isArray(d?.results)) return d.results;
+  if (Array.isArray(d?.data)) return d.data;
+  return [];
+};
+
 export default function Sections() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -20,7 +29,7 @@ export default function Sections() {
     setLoading(true);
     try {
       const response = await getSections();
-      setData(response.data);
+      setData(toArray(response));
     } catch (error) {
       message.error('Failed to fetch sections');
     } finally {
@@ -36,13 +45,14 @@ export default function Sections() {
 
   const handleEdit = (record) => {
     setEditingRecord(record);
-    form.setFieldsValue(record);
+    // Out: { section_id, section_name } — map to form field
+    form.setFieldsValue({ section_name: record.section_name });
     setModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (section_id) => {
     try {
-      await deleteSection(id);
+      await deleteSection(section_id);
       message.success('Section deleted successfully');
       fetchData();
     } catch (error) {
@@ -51,31 +61,46 @@ export default function Sections() {
   };
 
   const handleSubmit = async (values) => {
+    // payload: { section_name } — matches SectionCreate and SectionUpdate exactly
     try {
       if (editingRecord) {
-        await updateSection(editingRecord.id, values);
+        await updateSection(editingRecord.section_id, { section_name: values.section_name });
         message.success('Section updated successfully');
       } else {
-        await createSection(values);
+        await createSection({ section_name: values.section_name });
         message.success('Section created successfully');
       }
       setModalOpen(false);
       fetchData();
     } catch (error) {
-      message.error(editingRecord ? 'Failed to update' : 'Failed to create');
+      const detail = error.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        detail.forEach(e => message.error(`${e.loc?.slice(1).join('.')} — ${e.msg}`));
+      } else {
+        message.error(editingRecord ? 'Failed to update' : 'Failed to create');
+      }
     }
   };
 
-  const filteredData = data.filter(item => item.name?.toLowerCase().includes(filters.search.toLowerCase()));
+  // Out field is section_name (not name)
+  const filteredData = data.filter(item =>
+    item.section_name?.toLowerCase().includes(filters.search.toLowerCase())
+  );
 
   const columns = [
-    { title: 'Section Name', dataIndex: 'name', key: 'name', render: (text) => <strong>{text}</strong>, sorter: (a, b) => a.name.localeCompare(b.name) },
+    {
+      title: 'Section Name',
+      dataIndex: 'section_name',
+      key: 'section_name',
+      render: (text) => <strong>{text}</strong>,
+      sorter: (a, b) => a.section_name.localeCompare(b.section_name),
+    },
     {
       title: 'Actions', key: 'actions', width: 120,
       render: (_, record) => (
         <div style={{ display: 'flex', gap: 8 }}>
           <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)} className="action-btn edit-btn" />
-          <Popconfirm title="Delete this section?" onConfirm={() => handleDelete(record.id)}>
+          <Popconfirm title="Delete this section?" onConfirm={() => handleDelete(record.section_id)}>
             <Button type="link" icon={<DeleteOutlined />} danger className="action-btn delete-btn" />
           </Popconfirm>
         </div>
@@ -106,13 +131,13 @@ export default function Sections() {
         </Card>
 
         <Card className="table-card">
-          <Table columns={columns} dataSource={filteredData} rowKey="id" loading={loading} pagination={{ pageSize: 10, showTotal: (total) => `Total ${total} sections` }} />
+          <Table columns={columns} dataSource={filteredData} rowKey="section_id" loading={loading} pagination={{ pageSize: 10, showTotal: (total) => `Total ${total} sections` }} />
         </Card>
       </div>
 
       <Modal title={editingRecord ? 'Edit Section' : 'Add Section'} open={modalOpen} onCancel={() => setModalOpen(false)} onOk={() => form.submit()} width={500}>
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item name="name" label="Section Name" rules={[{ required: true, message: 'Please enter section name' }]}>
+          <Form.Item name="section_name" label="Section Name" rules={[{ required: true, message: 'Please enter section name' }]}>
             <Input placeholder="e.g., A" size="large" />
           </Form.Item>
         </Form>

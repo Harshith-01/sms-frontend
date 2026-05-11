@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { Card, Select, DatePicker, Button, Table, Radio, Input, Upload, message } from 'antd';
 import { SaveOutlined, CheckCircleOutlined, UploadOutlined } from '@ant-design/icons';
 import { createAttendanceSession, bulkUpsertAbsences } from '../../../../services/attendanceService';
-import { getClassSections, getAcademicTerms, getSubjects, getStudents } from '../../../../services/academicService';
+import { getClassSections, getAcademicTerms, getSubjects} from '../../../../services/academicService';
+import { getStudents } from '../../../../services/studentService';
+
 import dayjs from 'dayjs';
 import './Attendance.css';
 

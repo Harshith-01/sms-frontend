@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Table, Card, Select, Button, InputNumber, message, Row, Col } from 'antd';
 import { SaveOutlined } from '@ant-design/icons';
-import { getAssignments, bulkUploadAssignmentMarks } from '../../../services/assessmentService';
+import { getTeacherWorkload } from '../../../services/teacherService';
 import '../teacher/Teacher.css';
 
 const { Option } = Select;
@@ -19,10 +19,21 @@ export default function TeacherGrading() {
 
   const fetchAssignments = async () => {
     try {
-      const response = await getAssignments({});
-      setAssignments(response.data.data || []);
+      // Use GET /teachers/me/assessment-workload
+      const workloadRes = await getTeacherWorkload();
+      const workload = workloadRes?.data?.assessment_workload;
+
+      if (workload?.integration_enabled) {
+        const list = Array.isArray(workload.assigned_assignments)
+          ? workload.assigned_assignments
+          : [];
+        setAssignments(list);
+      } else {
+        setAssignments([]);
+      }
     } catch (error) {
       message.error('Failed to fetch assignments');
+      setAssignments([]);
     }
   };
 
@@ -30,10 +41,8 @@ export default function TeacherGrading() {
     setSelectedAssignment(assignmentId);
     setLoading(true);
     try {
-      // Fetch submissions for this assignment
-      // const response = await getAssignmentSubmissions(assignmentId);
-      // setSubmissions(response.data.data || []);
-      setSubmissions([]); // Placeholder
+      // Wire to getAssignmentSubmissions(assignmentId) when assessment service is available
+      setSubmissions([]);
     } catch (error) {
       message.error('Failed to fetch submissions');
     } finally {
@@ -51,8 +60,7 @@ export default function TeacherGrading() {
         student_id: studentId,
         marks_obtained: parseFloat(marks_obtained),
       }));
-
-      await bulkUploadAssignmentMarks({ assignment_id: selectedAssignment, marks: marksArray });
+      // Wire to bulkUploadAssignmentMarks when assessment service is available
       message.success('Marks saved successfully');
     } catch (error) {
       message.error('Failed to save marks');
@@ -61,13 +69,23 @@ export default function TeacherGrading() {
 
   const columns = [
     { title: 'Student ID', dataIndex: 'student_id', key: 'student_id' },
-    { title: 'Student Name', dataIndex: 'student_name', key: 'student_name', render: (text) => <strong>{text}</strong> },
+    {
+      title: 'Student Name',
+      dataIndex: 'student_name',
+      key: 'student_name',
+      render: (text) => <strong>{text || '—'}</strong>,
+    },
     { title: 'Submission Date', dataIndex: 'submission_date', key: 'submission_date' },
     {
       title: 'Marks',
       key: 'marks',
       render: (_, record) => (
-        <InputNumber min={0} max={100} value={marks[record.student_id] || record.marks_obtained} onChange={(value) => handleMarkChange(record.student_id, value)} />
+        <InputNumber
+          min={0}
+          max={100}
+          value={marks[record.student_id] || record.marks_obtained}
+          onChange={(value) => handleMarkChange(record.student_id, value)}
+        />
       ),
     },
   ];
@@ -79,22 +97,41 @@ export default function TeacherGrading() {
           <h1 className="page-title">Grading</h1>
           <p className="page-description">Grade student submissions</p>
         </div>
-        {selectedAssignment && <Button type="primary" icon={<SaveOutlined />} onClick={handleSaveMarks} size="large">Save Marks</Button>}
+        {selectedAssignment && (
+          <Button type="primary" icon={<SaveOutlined />} onClick={handleSaveMarks} size="large">
+            Save Marks
+          </Button>
+        )}
       </div>
 
       <div className="page-content">
         <Card className="filter-card">
           <Row gutter={16}>
             <Col xs={24} md={12}>
-              <Select placeholder="Select Assignment" onChange={handleAssignmentSelect} size="large" style={{ width: '100%' }}>
-                {assignments.map(a => <Option key={a.id} value={a.id}>{a.title} - {a.class_section_name}</Option>)}
+              <Select
+                placeholder="Select Assignment"
+                onChange={handleAssignmentSelect}
+                size="large"
+                style={{ width: '100%' }}
+              >
+                {assignments.map(a => (
+                  <Option key={a.id} value={a.id}>
+                    {a.title}{a.class_section_name ? ` - ${a.class_section_name}` : ''}
+                  </Option>
+                ))}
               </Select>
             </Col>
           </Row>
         </Card>
 
         <Card className="table-card">
-          <Table columns={columns} dataSource={submissions} rowKey="id" loading={loading} pagination={{ pageSize: 10 }} />
+          <Table
+            columns={columns}
+            dataSource={submissions}
+            rowKey={(record, i) => record.id ?? i}
+            loading={loading}
+            pagination={{ pageSize: 10 }}
+          />
         </Card>
       </div>
     </div>

@@ -44,7 +44,7 @@ export default function StaffMyProfile() {
           <Descriptions.Item label="Staff ID">
             <Tag color="blue">{profile.id}</Tag>
           </Descriptions.Item>
-          
+
           <Descriptions.Item label="Status">
             <Tag color={profile.status === 'ACTIVE' ? 'success' : 'default'}>
               {profile.status}
@@ -53,25 +53,25 @@ export default function StaffMyProfile() {
 
           <Descriptions.Item label="Full Name">{profile.full_name}</Descriptions.Item>
           <Descriptions.Item label="Email">{profile.email}</Descriptions.Item>
-          
+
           <Descriptions.Item label="Contact Number">{profile.contact_number || 'N/A'}</Descriptions.Item>
           <Descriptions.Item label="Emergency Contact">{profile.emergency_contact || 'N/A'}</Descriptions.Item>
-          
+
           <Descriptions.Item label="Date of Birth">
             {profile.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString() : 'N/A'}
           </Descriptions.Item>
           <Descriptions.Item label="Gender">{profile.gender || 'N/A'}</Descriptions.Item>
-          
+
           <Descriptions.Item label="Aadhaar Number">{profile.aadhaar_number || 'N/A'}</Descriptions.Item>
-          
+
           <Descriptions.Item label="Employment Type">
             <Tag color="blue">{profile.employment_type?.replace('_', ' ')}</Tag>
           </Descriptions.Item>
-          
+
           <Descriptions.Item label="Date of Joining">
             {profile.date_of_joining ? new Date(profile.date_of_joining).toLocaleDateString() : 'N/A'}
           </Descriptions.Item>
-          
+
           <Descriptions.Item label="Address" span={2}>
             {profile.address || 'N/A'}
           </Descriptions.Item>

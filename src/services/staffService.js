@@ -1,87 +1,72 @@
 import { createAPI } from "./api";
 
-// ✅ Connect to Staff Microservice
 const api = createAPI(import.meta.env.VITE_STAFF_SERVICE);
 
-// ==================== ADMIN ENDPOINTS ====================
-
-// Get all staff
-export const getStaff = async (filters = {}) => {
-  return api.get("/staff", {
-    params: filters,
-  });
+// Safe array extractor
+export const toArray = (res) => {
+  const d = res?.data;
+  if (Array.isArray(d)) return d;
+  if (Array.isArray(d?.items)) return d.items;
+  if (Array.isArray(d?.results)) return d.results;
+  if (Array.isArray(d?.data)) return d.data;
+  return [];
 };
 
-// Get staff by ID
-export const getStaffById = async (staffId) => {
-  return api.get(`/staff/${staffId}`);
+// ==================== STAFF ====================
+
+// GET /staff
+export const getStaff = (params = {}) => {
+  // Strip null/undefined params before sending
+  const clean = Object.fromEntries(
+    Object.entries(params).filter(([_, v]) => v !== null && v !== undefined && v !== '')
+  );
+  return api.get("/staff", { params: clean });
 };
 
-// Create staff
-export const createStaff = async (data) => {
-  return api.post("/staff", data);
-};
+// GET /staff/{staff_id}
+export const getStaffById = (staff_id) =>
+  api.get(`/staff/${staff_id}`);
 
-// Update staff
-export const updateStaff = async (staffId, data) => {
-  return api.put(`/staff/${staffId}`, data);
-};
+// POST /staff
+export const createStaff = (data) =>
+  api.post("/staff", data);
 
-// Deactivate staff
-export const deactivateStaff = async (staffId) => {
-  return api.delete(`/staff/${staffId}`);
-};
+// PUT /staff/{staff_id}
+export const updateStaff = (staff_id, data) =>
+  api.put(`/staff/${staff_id}`, data);
 
-// Bulk upload
-export const bulkUploadStaff = async (file) => {
+// DELETE /staff/{staff_id}
+export const deactivateStaff = (staff_id) =>
+  api.delete(`/staff/${staff_id}`);
+
+// POST /staff/bulk
+export const bulkUploadStaff = (file) => {
   const formData = new FormData();
   formData.append("file", file);
-
   return api.post("/staff/bulk", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+    headers: { "Content-Type": "multipart/form-data" },
   });
 };
 
-// Get designations
-export const getDesignations = async () => {
-  return api.get("/staff/designations/list");
-};
+// ==================== SELF ====================
 
-// Get departments
-export const getDepartments = async () => {
-  return api.get("/departments");
-};
+// GET /staff/me
+export const getMyProfile = () =>
+  api.get("/staff/me");
 
-// ==================== STAFF SELF ====================
+// GET /staff/me/timetable
+export const getMyTimetable = (params = {}) =>
+  api.get("/staff/me/timetable", { params });
 
-// My profile
-export const getMyProfile = async () => {
-  return api.get("/staff/me");
-};
+// ==================== DESIGNATIONS ====================
 
-// School timetable
-export const getSchoolTimetable = async (params = {}) => {
-  return api.get("/staff/me/timetable", {
-    params: {
-      class_section_id: params.class_section_id,
-      academic_term_id: params.academic_term_id,
-    },
-  });
-};
+// GET /staff/designations/list
+export const getDesignations = () =>
+  api.get("/staff/designations/list");
 
 // ==================== EXPORT ====================
 
 export default {
-  getStaff,
-  getStaffById,
-  createStaff,
-  updateStaff,
-  deactivateStaff,
-  bulkUploadStaff,
-  getDesignations,
-  getDepartments,
-  getMyProfile,
-  getSchoolTimetable,
+  getStaff, getStaffById, createStaff, updateStaff, deactivateStaff,
+  bulkUploadStaff, getMyProfile, getMyTimetable, getDesignations,
 };

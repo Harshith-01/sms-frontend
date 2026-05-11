@@ -20,10 +20,15 @@ export default function MyMeetings() {
   const fetchMeetings = async () => {
     try {
       setLoading(true);
-      const response = await getMyMeetings(filterStatus);
-      setMeetings(response.data || []);
+      // Pass status as query param object — GET /parents/me/meetings?status=...
+      const params = {};
+      if (filterStatus) params.status = filterStatus;
+      const response = await getMyMeetings(params);
+      const data = response.data;
+      setMeetings(Array.isArray(data) ? data : data?.items || data?.results || []);
     } catch (error) {
       message.error('Failed to load meetings');
+      setMeetings([]);
     } finally {
       setLoading(false);
     }
@@ -32,16 +37,13 @@ export default function MyMeetings() {
   const formatDateTime = (dateString) => {
     const date = new Date(dateString);
     const day = date.getDate().toString().padStart(2, '0');
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const month = monthNames[date.getMonth()];
     const year = date.getFullYear();
-    
     let hours = date.getHours();
     const minutes = date.getMinutes().toString().padStart(2, '0');
     const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-    
+    hours = hours % 12 || 12;
     return `${day} ${month} ${year}, ${hours.toString().padStart(2, '0')}:${minutes} ${ampm}`;
   };
 
@@ -57,11 +59,7 @@ export default function MyMeetings() {
   };
 
   const getModeIcon = (mode) => {
-    const icons = {
-      ONLINE: '💻',
-      OFFLINE: '🏫',
-      PHONE: '📞'
-    };
+    const icons = { ONLINE: '💻', OFFLINE: '🏫', PHONE: '📞' };
     return icons[mode] || '📅';
   };
 
@@ -95,19 +93,13 @@ export default function MyMeetings() {
       title: 'Mode',
       dataIndex: 'mode',
       key: 'mode',
-      render: (mode) => (
-        <span>
-          {getModeIcon(mode)} {mode}
-        </span>
-      ),
+      render: (mode) => <span>{getModeIcon(mode)} {mode}</span>,
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (status) => (
-        <Tag color={getStatusColor(status)}>{status}</Tag>
-      ),
+      render: (status) => <Tag color={getStatusColor(status)}>{status}</Tag>,
     },
     {
       title: 'Actions',
@@ -115,17 +107,11 @@ export default function MyMeetings() {
       render: (_, record) => (
         <div>
           {record.status === 'APPROVED' && record.meeting_link && (
-            <Button 
-              type="link" 
-              size="small"
-              onClick={() => window.open(record.meeting_link, '_blank')}
-            >
+            <Button type="link" size="small" onClick={() => window.open(record.meeting_link, '_blank')}>
               Join Meeting
             </Button>
           )}
-          <Button type="link" size="small">
-            View Details
-          </Button>
+          <Button type="link" size="small">View Details</Button>
         </div>
       ),
     },
@@ -136,18 +122,10 @@ export default function MyMeetings() {
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>My Meetings</h2>
         <div>
-          <Button 
-            icon={<ReloadOutlined />} 
-            onClick={fetchMeetings}
-            style={{ marginRight: 8 }}
-          >
+          <Button icon={<ReloadOutlined />} onClick={fetchMeetings} style={{ marginRight: 8 }}>
             Refresh
           </Button>
-          <Button 
-            type="primary" 
-            icon={<PlusOutlined />}
-            onClick={() => navigate('/parent/meetings/request')}
-          >
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/parent/meetings/request')}>
             Request New Meeting
           </Button>
         </div>
@@ -178,15 +156,8 @@ export default function MyMeetings() {
             <Spin size="large" />
           </div>
         ) : meetings.length === 0 ? (
-          <Empty 
-            description="No meetings found"
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-          >
-            <Button 
-              type="primary" 
-              icon={<PlusOutlined />}
-              onClick={() => navigate('/parent/meetings/request')}
-            >
+          <Empty description="No meetings found" image={Empty.PRESENTED_IMAGE_SIMPLE}>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate('/parent/meetings/request')}>
               Request Your First Meeting
             </Button>
           </Empty>
@@ -194,7 +165,7 @@ export default function MyMeetings() {
           <Table
             columns={columns}
             dataSource={meetings}
-            rowKey="id"
+            rowKey={(r, i) => r.id ?? i}
             pagination={{ pageSize: 10 }}
           />
         )}

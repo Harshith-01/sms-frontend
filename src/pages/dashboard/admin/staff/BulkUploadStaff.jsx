@@ -11,7 +11,6 @@ export default function BulkUploadStaff() {
   const [result, setResult] = useState(null);
 
   const downloadTemplate = () => {
-    // Create Excel template content
     const template = `full_name,email,contact_number,designation_id,department_id,employment_type,date_of_joining,address,date_of_birth,gender,aadhaar_number
 John Doe,john@example.com,9876543210,1,1,FULL_TIME,2024-01-15,123 Street City,1990-05-20,MALE,123456789012
 Jane Smith,jane@example.com,9876543211,2,2,PART_TIME,2024-02-01,456 Avenue Town,1992-08-15,FEMALE,234567890123`;
@@ -25,18 +24,35 @@ Jane Smith,jane@example.com,9876543211,2,2,PART_TIME,2024-02-01,456 Avenue Town,
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
-    
     message.success('Template downloaded successfully');
   };
 
   const handleUpload = async (file) => {
+    // Validate file type
+    const isExcel = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      || file.type === 'application/vnd.ms-excel'
+      || file.name.endsWith('.xlsx')
+      || file.name.endsWith('.xls');
+
+    if (!isExcel) {
+      message.error('Only .xlsx and .xls files are accepted');
+      return false;
+    }
+
+    // Validate file size (5MB max)
+    const isUnder5MB = file.size / 1024 / 1024 < 5;
+    if (!isUnder5MB) {
+      message.error('File size must be less than 5MB');
+      return false;
+    }
+
     try {
       setUploading(true);
       setResult(null);
-      
+
       const response = await bulkUploadStaff(file);
       setResult(response.data);
-      
+
       if (response.data.error_count === 0) {
         message.success(`Successfully uploaded ${response.data.success_count} staff members`);
       } else {
@@ -47,8 +63,8 @@ Jane Smith,jane@example.com,9876543211,2,2,PART_TIME,2024-02-01,456 Avenue Town,
     } finally {
       setUploading(false);
     }
-    
-    return false; // Prevent auto upload
+
+    return false; // Prevent auto upload by antd
   };
 
   const errorColumns = [

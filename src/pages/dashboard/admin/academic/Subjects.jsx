@@ -4,6 +4,15 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutli
 import { getSubjects, createSubject, updateSubject, deleteSubject, getDepartments } from '../../../../services/academicService';
 import './Academic.css';
 
+const toArray = (res) => {
+  const d = res?.data;
+  if (Array.isArray(d)) return d;
+  if (Array.isArray(d?.items)) return d.items;
+  if (Array.isArray(d?.results)) return d.results;
+  if (Array.isArray(d?.data)) return d.data;
+  return [];
+};
+
 const { Option } = Select;
 
 export default function Subjects() {
@@ -24,7 +33,7 @@ export default function Subjects() {
     setLoading(true);
     try {
       const response = await getSubjects();
-      setData(response.data);
+      setData(toArray(response));
     } catch (error) {
       message.error('Failed to fetch subjects');
     } finally {
@@ -35,7 +44,7 @@ export default function Subjects() {
   const fetchDepartments = async () => {
     try {
       const response = await getDepartments();
-      setDepartments(response.data);
+      setDepartments(toArray(response));
     } catch (error) {
       console.error('Failed to fetch departments');
     }
@@ -49,13 +58,20 @@ export default function Subjects() {
 
   const handleEdit = (record) => {
     setEditingRecord(record);
-    form.setFieldsValue(record);
+    form.setFieldsValue({
+      subject_name: record.subject_name,
+      subject_code: record.subject_code,
+      department_id: record.department_id,
+      is_elective: record.is_elective,
+      // status only shown on edit — map ACTIVE→true for Switch
+      is_active: record.status === 'ACTIVE',
+    });
     setModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (subject_id) => {
     try {
-      await deleteSubject(id);
+      await deleteSubject(subject_id);
       message.success('Subject deleted successfully');
       fetchData();
     } catch (error) {
@@ -66,30 +82,65 @@ export default function Subjects() {
   const handleSubmit = async (values) => {
     try {
       if (editingRecord) {
-        await updateSubject(editingRecord.id, values);
+        // SubjectUpdate: subject_name, subject_code, department_id, is_elective, status
+        const payload = {
+          subject_name: values.subject_name,
+          subject_code: values.subject_code,
+          department_id: values.department_id ? Number(values.department_id) : null,
+          is_elective: values.is_elective || false,
+          status: values.is_active ? 'ACTIVE' : 'INACTIVE',
+        };
+        await updateSubject(editingRecord.id, payload);
         message.success('Subject updated successfully');
       } else {
-        await createSubject(values);
+        // SubjectCreate: subject_name, subject_code, department_id, is_elective — NO status
+        const payload = {
+          subject_name: values.subject_name,
+          subject_code: values.subject_code,
+          department_id: values.department_id ? Number(values.department_id) : null,
+          is_elective: values.is_elective || false,
+        };
+        await createSubject(payload);
         message.success('Subject created successfully');
       }
       setModalOpen(false);
       fetchData();
     } catch (error) {
-      message.error(editingRecord ? 'Failed to update' : 'Failed to create');
+      const detail = error.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        detail.forEach(e => message.error(`${e.loc?.slice(1).join('.')} — ${e.msg}`));
+      } else {
+        message.error(editingRecord ? 'Failed to update' : 'Failed to create');
+      }
     }
   };
 
   const filteredData = data.filter(item =>
-    item.name?.toLowerCase().includes(filters.search.toLowerCase()) ||
-    item.code?.toLowerCase().includes(filters.search.toLowerCase())
+    item.subject_name?.toLowerCase().includes(filters.search.toLowerCase()) ||
+    item.subject_code?.toLowerCase().includes(filters.search.toLowerCase())
   );
 
   const columns = [
-    { title: 'Subject Name', dataIndex: 'name', key: 'name', render: (text) => <strong>{text}</strong>, sorter: (a, b) => a.name.localeCompare(b.name) },
-    { title: 'Code', dataIndex: 'code', key: 'code' },
-    { title: 'Department', dataIndex: 'department_name', key: 'department_name' },
-    { title: 'Elective', dataIndex: 'is_elective', key: 'is_elective', render: (text) => <Tag color={text ? 'blue' : 'default'}>{text ? 'Yes' : 'No'}</Tag> },
-    { title: 'Status', dataIndex: 'is_active', key: 'is_active', render: (text) => <Tag color={text ? 'green' : 'red'}>{text ? 'Active' : 'Inactive'}</Tag> },
+    {
+      title: 'Subject Name',
+      dataIndex: 'subject_name',
+      key: 'subject_name',
+      render: (text) => <strong>{text}</strong>,
+      sorter: (a, b) => a.subject_name.localeCompare(b.subject_name),
+    },
+    { title: 'Code', dataIndex: 'subject_code', key: 'subject_code' },
+    {
+      title: 'Elective',
+      dataIndex: 'is_elective',
+      key: 'is_elective',
+      render: (text) => <Tag color={text ? 'blue' : 'default'}>{text ? 'Yes' : 'No'}</Tag>,
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (text) => <Tag color={text === 'ACTIVE' ? 'green' : 'red'}>{text === 'ACTIVE' ? 'Active' : 'Inactive'}</Tag>,
+    },
     {
       title: 'Actions', key: 'actions', fixed: 'right', width: 120,
       render: (_, record) => (
@@ -130,22 +181,35 @@ export default function Subjects() {
         </Card>
       </div>
 
-      <Modal title={editingRecord ? 'Edit Subject' : 'Add Subject'} open={modalOpen} onCancel={() => setModalOpen(false)} onOk={() => form.submit()} width={600}>
+      <Modal
+        title={editingRecord ? 'Edit Subject' : 'Add Subject'}
+        open={modalOpen}
+        onCancel={() => setModalOpen(false)}
+        onOk={() => form.submit()}
+        width={600}
+        okText={editingRecord ? 'Update' : 'Create'}
+      >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item name="name" label="Subject Name" rules={[{ required: true, message: 'Required' }]}>
+          <Form.Item name="subject_name" label="Subject Name" rules={[{ required: true, message: 'Required' }]}>
             <Input placeholder="e.g., Mathematics" size="large" />
           </Form.Item>
-          <Form.Item name="code" label="Subject Code" rules={[{ required: true, message: 'Required' }]}>
+          <Form.Item name="subject_code" label="Subject Code" rules={[{ required: true, message: 'Required' }]}>
             <Input placeholder="e.g., MATH101" size="large" />
           </Form.Item>
-          <Form.Item name="department_id" label="Department" rules={[{ required: true, message: 'Required' }]}>
-            <Select placeholder="Select department" size="large">
+          <Form.Item name="department_id" label="Department">
+            <Select placeholder="Select department" size="large" allowClear>
               {departments.map(d => <Option key={d.id} value={d.id}>{d.name}</Option>)}
             </Select>
           </Form.Item>
           <Form.Item name="is_elective" label="Is Elective" valuePropName="checked" initialValue={false}>
             <Switch />
           </Form.Item>
+          {/* Status only shown when editing — SubjectCreate has no status field */}
+          {editingRecord && (
+            <Form.Item name="is_active" label="Status" valuePropName="checked">
+              <Switch checkedChildren="Active" unCheckedChildren="Inactive" />
+            </Form.Item>
+          )}
         </Form>
       </Modal>
     </div>

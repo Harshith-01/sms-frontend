@@ -13,28 +13,30 @@ export default function ChildTimetable() {
   const [timetable, setTimetable] = useState([]);
   const [children, setChildren] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedChild, setSelectedChild] = useState(studentId);
-
-  // These would come from dropdowns in real app
-  const [classSectionId, setClassSectionId] = useState(1);
-  const [academicTermId, setAcademicTermId] = useState(1);
+  const [selectedChild, setSelectedChild] = useState(studentId || null);
+  const [classSectionId] = useState(1);
+  const [academicTermId] = useState(1);
 
   useEffect(() => {
     fetchChildren();
   }, []);
 
   useEffect(() => {
-    if (selectedChild) {
-      fetchTimetable();
+    if (selectedChild && children.length > 0) {
+      const childData = children.find(c => c.student_id === selectedChild);
+      // Check can_view_timetable permission before calling API
+      if (childData?.can_view_timetable) {
+        fetchTimetable();
+      }
     }
-  }, [selectedChild]);
+  }, [selectedChild, children]);
 
   const fetchChildren = async () => {
     try {
       const response = await getMyChildren();
-      const kids = response.data || [];
+      const kids = Array.isArray(response.data) ? response.data : [];
       setChildren(kids);
-      
+
       if (!studentId && kids.length > 0) {
         const childWithAccess = kids.find(c => c.can_view_timetable);
         if (childWithAccess) {
@@ -51,9 +53,9 @@ export default function ChildTimetable() {
       setLoading(true);
       const response = await getChildTimetable(selectedChild, {
         class_section_id: classSectionId,
-        academic_term_id: academicTermId
+        academic_term_id: academicTermId,
       });
-      setTimetable(response.data || []);
+      setTimetable(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       message.error('Failed to load timetable');
     } finally {
@@ -65,18 +67,8 @@ export default function ChildTimetable() {
   const canViewTimetable = selectedChildData?.can_view_timetable;
 
   const columns = [
-    {
-      title: 'Day',
-      dataIndex: 'day_of_week',
-      key: 'day_of_week',
-      width: 100,
-    },
-    {
-      title: 'Period',
-      dataIndex: 'period_number',
-      key: 'period_number',
-      width: 80,
-    },
+    { title: 'Day', dataIndex: 'day_of_week', key: 'day_of_week', width: 100 },
+    { title: 'Period', dataIndex: 'period_number', key: 'period_number', width: 80 },
     {
       title: 'Time',
       dataIndex: 'start_time',
@@ -84,30 +76,15 @@ export default function ChildTimetable() {
       render: (start, record) => `${start} - ${record.end_time}`,
       width: 150,
     },
-    {
-      title: 'Subject',
-      dataIndex: 'subject_name',
-      key: 'subject_name',
-    },
-    {
-      title: 'Teacher',
-      dataIndex: 'teacher_name',
-      key: 'teacher_name',
-    },
-    {
-      title: 'Room',
-      dataIndex: 'room_number',
-      key: 'room_number',
-      width: 100,
-    },
+    { title: 'Subject', dataIndex: 'subject_name', key: 'subject_name' },
+    { title: 'Teacher', dataIndex: 'teacher_name', key: 'teacher_name' },
+    { title: 'Room', dataIndex: 'room_number', key: 'room_number', width: 100 },
   ];
 
-  if (!canViewTimetable) {
+  if (children.length > 0 && selectedChild && canViewTimetable === false) {
     return (
       <Card>
-        <Empty
-          description="You don't have permission to view timetable for this child"
-        >
+        <Empty description="You don't have permission to view timetable for this child">
           <Button onClick={() => navigate('/parent/children')}>
             Back to My Children
           </Button>
@@ -120,10 +97,7 @@ export default function ChildTimetable() {
     <div className="child-timetable-container">
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>Class Timetable</h2>
-        <Button 
-          icon={<ArrowLeftOutlined />} 
-          onClick={() => navigate('/parent/children')}
-        >
+        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/parent/children')}>
           Back
         </Button>
       </div>
@@ -148,13 +122,7 @@ export default function ChildTimetable() {
         </div>
       </Card>
 
-      <Card 
-        title={
-          <span>
-            <CalendarOutlined /> Weekly Schedule
-          </span>
-        }
-      >
+      <Card title={<span><CalendarOutlined /> Weekly Schedule</span>}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: '40px 0' }}>
             <Spin size="large" />
@@ -165,7 +133,7 @@ export default function ChildTimetable() {
           <Table
             columns={columns}
             dataSource={timetable}
-            rowKey="id"
+            rowKey={(r, i) => r.id ?? i}
             pagination={false}
             scroll={{ x: 800 }}
           />

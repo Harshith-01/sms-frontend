@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Statistic, Row, Col, Progress, Button, Empty, Spin, message, Select, DatePicker } from 'antd';
-import { 
-  ClockCircleOutlined, 
-  CheckCircleOutlined, 
+import {
+  ClockCircleOutlined,
+  CheckCircleOutlined,
   CloseCircleOutlined,
   ArrowLeftOutlined,
   PercentageOutlined
@@ -20,29 +20,32 @@ export default function ChildAttendance() {
   const [attendance, setAttendance] = useState(null);
   const [children, setChildren] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedChild, setSelectedChild] = useState(studentId);
-
-  // These would come from dropdowns in real app
-  const [classSectionId, setClassSectionId] = useState(1);
-  const [academicTermId, setAcademicTermId] = useState(1);
+  const [selectedChild, setSelectedChild] = useState(studentId || null);
+  const [classSectionId] = useState(1);
+  const [academicTermId] = useState(1);
 
   useEffect(() => {
     fetchChildren();
   }, []);
 
   useEffect(() => {
-    if (selectedChild) {
-      fetchAttendance();
+    // Only fetch attendance after children are loaded and we have a selected child
+    if (selectedChild && children.length > 0) {
+      const childData = children.find(c => c.student_id === selectedChild);
+      // Check permission before calling API
+      if (childData?.can_view_attendance) {
+        fetchAttendance();
+      }
     }
-  }, [selectedChild]);
+  }, [selectedChild, children]);
 
   const fetchChildren = async () => {
     try {
       const response = await getMyChildren();
-      const kids = response.data || [];
+      const kids = Array.isArray(response.data) ? response.data : [];
       setChildren(kids);
-      
-      // Set first child with attendance permission as selected
+
+      // Auto-select first child with attendance permission
       if (!studentId && kids.length > 0) {
         const childWithAccess = kids.find(c => c.can_view_attendance);
         if (childWithAccess) {
@@ -59,7 +62,7 @@ export default function ChildAttendance() {
       setLoading(true);
       const response = await getChildAttendance(selectedChild, {
         class_section_id: classSectionId,
-        academic_term_id: academicTermId
+        academic_term_id: academicTermId,
       });
       setAttendance(response.data);
     } catch (error) {
@@ -72,12 +75,11 @@ export default function ChildAttendance() {
   const selectedChildData = children.find(c => c.student_id === selectedChild);
   const canViewAttendance = selectedChildData?.can_view_attendance;
 
-  if (!canViewAttendance) {
+  // Show permission denied only after children have loaded and child is selected
+  if (children.length > 0 && selectedChild && canViewAttendance === false) {
     return (
       <Card>
-        <Empty
-          description="You don't have permission to view attendance for this child"
-        >
+        <Empty description="You don't have permission to view attendance for this child">
           <Button onClick={() => navigate('/parent/children')}>
             Back to My Children
           </Button>
@@ -90,10 +92,7 @@ export default function ChildAttendance() {
     <div className="child-attendance-container">
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>Child Attendance</h2>
-        <Button 
-          icon={<ArrowLeftOutlined />} 
-          onClick={() => navigate('/parent/children')}
-        >
+        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/parent/children')}>
           Back
         </Button>
       </div>
@@ -131,7 +130,6 @@ export default function ChildAttendance() {
         </Card>
       ) : (
         <>
-          {/* Summary Stats */}
           <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
             <Col xs={24} sm={12} md={6}>
               <Card>
@@ -176,11 +174,10 @@ export default function ChildAttendance() {
             </Col>
           </Row>
 
-          {/* Progress Bar */}
           <Card title="Attendance Overview">
             <div style={{ marginBottom: 24 }}>
-              <Progress 
-                percent={attendance.percentage || 0} 
+              <Progress
+                percent={attendance.percentage || 0}
                 status={attendance.percentage >= 75 ? 'success' : 'exception'}
                 strokeColor={attendance.percentage >= 75 ? '#52c41a' : '#ff4d4f'}
               />

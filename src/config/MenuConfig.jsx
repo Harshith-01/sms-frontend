@@ -27,8 +27,9 @@ import {
   UserAddOutlined,
   PlusOutlined,
   IdcardOutlined,
+  FolderOutlined,
 } from '@ant-design/icons';
- 
+
 // ==================== ADMIN MENU ====================
 const getAdminMenu = () => {
   return [
@@ -61,6 +62,31 @@ const getAdminMenu = () => {
       label: 'Staff',
       icon: IdcardOutlined,
       path: '/admin/staff',
+    },
+    {
+      key: 'documents',
+      label: 'Documents',
+      icon: FolderOutlined,
+      children: [
+        {
+          key: 'student-documents',
+          label: 'Student Documents',
+          icon: UserOutlined,
+          path: '/admin/documents/students',
+        },
+        {
+          key: 'teacher-documents',
+          label: 'Teacher Documents',
+          icon: TeamOutlined,
+          path: '/admin/documents/teachers',
+        },
+        {
+          key: 'pending-verifications',
+          label: 'Pending Verifications',
+          icon: ClockCircleOutlined,
+          path: '/admin/documents/pending',
+        },
+      ],
     },
     {
       key: 'academic',
@@ -224,7 +250,7 @@ const getAdminMenu = () => {
     },
   ];
 };
- 
+
 // ==================== TEACHER MENU ====================
 const getTeacherMenu = () => {
   return [
@@ -233,6 +259,12 @@ const getTeacherMenu = () => {
       label: 'Dashboard',
       icon: DashboardOutlined,
       path: '/teacher/dashboard',
+    },
+    {
+      key: 'documents',
+      label: 'My Documents',
+      icon: FolderOutlined,
+      path: '/teacher/documents',
     },
     {
       key: 'attendance',
@@ -291,7 +323,7 @@ const getTeacherMenu = () => {
     },
   ];
 };
- 
+
 // ==================== STUDENT MENU ====================
 const getStudentMenu = () => {
   return [
@@ -300,6 +332,12 @@ const getStudentMenu = () => {
       label: 'Dashboard',
       icon: DashboardOutlined,
       path: '/student/dashboard',
+    },
+    {
+      key: 'documents',
+      label: 'My Documents',
+      icon: FolderOutlined,
+      path: '/student/documents',
     },
     {
       key: 'attendance',
@@ -419,20 +457,19 @@ const getStaffMenu = () => {
     },
   ];
 };
- 
+
 // ==================== MAIN EXPORT ====================
 export const getMenuForRole = (role) => {
-  // Normalize role to lowercase for consistent matching
   const normalizedRole = role?.toLowerCase();
 
   if (normalizedRole === 'admin') {
     return getAdminMenu();
   }
- 
+
   if (normalizedRole === 'teacher') {
     return getTeacherMenu();
   }
- 
+
   if (normalizedRole === 'student') {
     return getStudentMenu();
   }
@@ -444,11 +481,10 @@ export const getMenuForRole = (role) => {
   if (normalizedRole === 'non_teaching_staff' || normalizedRole === 'staff') {
     return getStaffMenu();
   }
- 
-  // Default return empty array if role doesn't match
+
   return [];
 };
- 
+
 // ==================== BOTTOM MENU ====================
 export const getBottomForRole = (role) => {
   return [

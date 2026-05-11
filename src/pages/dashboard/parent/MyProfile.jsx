@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, Descriptions, Tag, Spin, message } from 'antd';
+import { Card, Descriptions, Tag, Spin } from 'antd';
 import { UserOutlined, PhoneOutlined, MailOutlined, HomeOutlined } from '@ant-design/icons';
 import { getMyProfile } from '../../../services/parentService';
 import './Parent.css';
@@ -18,7 +18,7 @@ export default function MyProfile() {
       const response = await getMyProfile();
       setProfile(response.data);
     } catch (error) {
-      message.error('Failed to load profile');
+      console.error('Failed to load profile');
     } finally {
       setLoading(false);
     }
@@ -51,7 +51,7 @@ export default function MyProfile() {
           <Descriptions.Item label={<><UserOutlined /> Parent ID</>}>
             <Tag color="blue">{profile.id}</Tag>
           </Descriptions.Item>
-          
+
           <Descriptions.Item label={<><UserOutlined /> Status</>}>
             <Tag color={profile.is_active ? 'success' : 'default'}>
               {profile.is_active ? 'Active' : 'Inactive'}
@@ -59,21 +59,13 @@ export default function MyProfile() {
           </Descriptions.Item>
 
           {profile.father_name && (
-            <Descriptions.Item label="Father's Name">
-              {profile.father_name}
-            </Descriptions.Item>
+            <Descriptions.Item label="Father's Name">{profile.father_name}</Descriptions.Item>
           )}
-
           {profile.mother_name && (
-            <Descriptions.Item label="Mother's Name">
-              {profile.mother_name}
-            </Descriptions.Item>
+            <Descriptions.Item label="Mother's Name">{profile.mother_name}</Descriptions.Item>
           )}
-
           {profile.guardian_name && (
-            <Descriptions.Item label="Guardian's Name">
-              {profile.guardian_name}
-            </Descriptions.Item>
+            <Descriptions.Item label="Guardian's Name">{profile.guardian_name}</Descriptions.Item>
           )}
 
           <Descriptions.Item label={<><PhoneOutlined /> Primary Contact</>}>
@@ -85,7 +77,6 @@ export default function MyProfile() {
               {profile.secondary_contact}
             </Descriptions.Item>
           )}
-
           {profile.guardian_contact && (
             <Descriptions.Item label={<><PhoneOutlined /> Guardian Contact</>}>
               {profile.guardian_contact}
@@ -101,25 +92,17 @@ export default function MyProfile() {
               {profile.guardian_email}
             </Descriptions.Item>
           )}
-
           {profile.occupation && (
-            <Descriptions.Item label="Occupation">
-              {profile.occupation}
-            </Descriptions.Item>
+            <Descriptions.Item label="Occupation">{profile.occupation}</Descriptions.Item>
           )}
-
           {profile.annual_income && (
-            <Descriptions.Item label="Annual Income">
-              ₹{profile.annual_income}
-            </Descriptions.Item>
+            <Descriptions.Item label="Annual Income">₹{profile.annual_income}</Descriptions.Item>
           )}
-
           {profile.address && (
             <Descriptions.Item label={<><HomeOutlined /> Current Address</>} span={2}>
               {profile.address}
             </Descriptions.Item>
           )}
-
           {profile.permanent_address && (
             <Descriptions.Item label={<><HomeOutlined /> Permanent Address</>} span={2}>
               {profile.permanent_address}

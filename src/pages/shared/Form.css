@@ -47,7 +47,7 @@
 .back-btn {
   border-radius: 8px;
   font-weight: 500;
-  height: 40px;
+  height: 44px;
   padding: 0 20px;
 }
 
@@ -57,7 +57,8 @@
 }
 
 /* Tabs */
-.teacher-tabs {
+.teacher-tabs,
+.form-tabs {
   background: #ffffff;
   border-radius: 0;
   overflow: hidden;
@@ -65,14 +66,16 @@
   border: none;
 }
 
-.teacher-tabs .ant-tabs-nav {
+.teacher-tabs .ant-tabs-nav,
+.form-tabs .ant-tabs-nav {
   margin: 0;
   padding: 0 40px;
   background: #ffffff;
   border-bottom: 1px solid #e5e7eb;
 }
 
-.teacher-tabs .ant-tabs-tab {
+.teacher-tabs .ant-tabs-tab,
+.form-tabs .ant-tabs-tab {
   font-size: 15px;
   font-weight: 600;
   padding: 16px 24px;
@@ -80,20 +83,24 @@
   transition: all 0.2s;
 }
 
-.teacher-tabs .ant-tabs-tab:hover {
+.teacher-tabs .ant-tabs-tab:hover,
+.form-tabs .ant-tabs-tab:hover {
   color: #667eea;
 }
 
-.teacher-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+.teacher-tabs .ant-tabs-tab-active .ant-tabs-tab-btn,
+.form-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
   color: #667eea;
 }
 
-.teacher-tabs .ant-tabs-ink-bar {
+.teacher-tabs .ant-tabs-ink-bar,
+.form-tabs .ant-tabs-ink-bar {
   background: #667eea;
   height: 3px;
 }
 
-.teacher-tabs .ant-tabs-content-holder {
+.teacher-tabs .ant-tabs-content-holder,
+.form-tabs .ant-tabs-content-holder {
   padding: 0;
 }
 
@@ -141,7 +148,8 @@
   flex-shrink: 0;
 }
 
-.teacher-avatar {
+.teacher-avatar,
+.form-avatar {
   border-radius: 12px;
   border: 4px solid #f3f4f6;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -150,6 +158,25 @@
 /* Info Section */
 .info-section {
   flex: 1;
+}
+
+/* Form layout — photo + info side by side */
+.form-layout {
+  display: flex;
+  gap: 48px;
+  align-items: flex-start;
+}
+
+.form-layout .photo-section {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.form-layout .info-section {
+  flex: 1;
+  min-width: 0;
 }
 
 /* Field Group */
@@ -272,25 +299,47 @@
   color: #991b1b;
 }
 
-/* Buttons */
-.card-header .ant-btn-primary {
+/* =============================================
+   BUTTONS — Standardized sizes
+   ============================================= */
+
+/* All large buttons — uniform height and style */
+.ant-btn-lg,
+.ant-btn[size="large"] {
+  height: 44px !important;
+  padding: 0 20px !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+}
+
+/* All primary buttons */
+.ant-btn-primary {
   background: #667eea;
   border-color: #667eea;
   border-radius: 8px;
-  height: 40px;
   font-weight: 600;
   box-shadow: 0 1px 2px rgba(102, 126, 234, 0.2);
 }
 
-.card-header .ant-btn-primary:hover {
-  background: #5568d3;
-  border-color: #5568d3;
+.ant-btn-primary:hover {
+  background: #5568d3 !important;
+  border-color: #5568d3 !important;
   box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
+/* Card header buttons */
+.card-header .ant-btn-primary {
+  height: 44px;
 }
 
 .card-header .ant-btn-default {
   border-radius: 8px;
-  height: 40px;
+  height: 44px;
   font-weight: 500;
   border: 1.5px solid #d1d5db;
 }
@@ -298,6 +347,117 @@
 .card-header .ant-btn-default:hover {
   border-color: #667eea;
   color: #667eea;
+}
+
+/* Add-mode action buttons row — centered */
+.form-container .ant-row[justify="center"],
+.tab-card .ant-row[justify="center"] {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* =============================================
+   INPUTS — Standardized sizes
+   ============================================= */
+
+/* All large inputs and selects — uniform 44px */
+.ant-input-lg,
+.ant-input-affix-wrapper-lg {
+  height: 44px !important;
+  border-radius: 8px !important;
+  font-size: 15px !important;
+}
+
+.ant-select-lg .ant-select-selector {
+  height: 44px !important;
+  border-radius: 8px !important;
+  padding: 4px 12px !important;
+  font-size: 15px !important;
+}
+
+.ant-select-lg .ant-select-selection-item {
+  line-height: 34px !important;
+}
+
+.ant-picker-large {
+  height: 44px !important;
+  border-radius: 8px !important;
+}
+
+/* =============================================
+   FILTER CARD
+   ============================================= */
+
+.filter-card {
+  margin-bottom: 16px;
+}
+
+.filter-card .ant-card-body {
+  padding: 20px 24px !important;
+}
+
+.filter-card .ant-space {
+  width: 100%;
+  display: flex;
+}
+
+.filter-card .ant-btn {
+  min-width: 90px;
+  flex: 1;
+}
+
+/* =============================================
+   LIST HEADER
+   ============================================= */
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 0 20px 0;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.list-header .ant-space {
+  flex-shrink: 0;
+}
+
+/* =============================================
+   TABLE ACTION BUTTONS
+   ============================================= */
+
+.action-btn {
+  width: 32px !important;
+  height: 32px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 6px !important;
+}
+
+/* =============================================
+   FORM LOADING
+   ============================================= */
+
+.form-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  width: 100%;
+}
+
+/* =============================================
+   FORM CONTAINER
+   ============================================= */
+
+.form-container {
+  min-height: 100vh;
+  background: #f8f9fa;
 }
 
 /* Empty State */
@@ -322,13 +482,17 @@
   display: none;
 }
 
-/* Responsive */
+/* =============================================
+   RESPONSIVE
+   ============================================= */
+
 @media (max-width: 1024px) {
   .teacher-info-layout {
     gap: 32px;
   }
 
-  .teacher-avatar {
+  .teacher-avatar,
+  .form-avatar {
     width: 150px !important;
     height: 150px !important;
   }
@@ -350,11 +514,13 @@
     font-size: 24px;
   }
 
-  .teacher-tabs .ant-tabs-nav {
+  .teacher-tabs .ant-tabs-nav,
+  .form-tabs .ant-tabs-nav {
     padding: 0 20px;
   }
 
-  .teacher-tabs .ant-tabs-tab {
+  .teacher-tabs .ant-tabs-tab,
+  .form-tabs .ant-tabs-tab {
     padding: 12px 16px;
     font-size: 14px;
   }
@@ -363,10 +529,11 @@
     padding: 24px;
   }
 
-  .teacher-info-layout {
+  .teacher-info-layout,
+  .form-layout {
     flex-direction: column;
     align-items: center;
-    gap: 32px;
+    gap: 24px;
   }
 
   .photo-section {
@@ -375,7 +542,8 @@
     justify-content: center;
   }
 
-  .info-section {
+  .info-section,
+  .form-layout .info-section {
     width: 100%;
   }
 
@@ -392,6 +560,22 @@
   .card-header .ant-space .ant-btn {
     flex: 1;
   }
+
+  .list-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .filter-card .ant-btn {
+    min-width: 80px;
+  }
+
+  .ant-btn-lg,
+  .ant-btn[size="large"] {
+    height: 40px !important;
+    font-size: 14px !important;
+    padding: 0 16px !important;
+  }
 }
 
 @media (max-width: 480px) {
@@ -399,7 +583,8 @@
     font-size: 20px;
   }
 
-  .teacher-avatar {
+  .teacher-avatar,
+  .form-avatar {
     width: 120px !important;
     height: 120px !important;
   }
@@ -417,9 +602,9 @@
     height: 40px !important;
   }
 
-  .teacher-tabs .ant-tabs-tab {
-    padding: 12px 12px;
+  .teacher-tabs .ant-tabs-tab,
+  .form-tabs .ant-tabs-tab {
+    padding: 12px;
     font-size: 13px;
   }
 }
-/* Form.css - Same as Details.css */

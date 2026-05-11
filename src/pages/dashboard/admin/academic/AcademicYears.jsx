@@ -5,6 +5,15 @@ import { getAcademicYears, createAcademicYear, updateAcademicYear, deleteAcademi
 import dayjs from 'dayjs';
 import './Academic.css';
 
+const toArray = (res) => {
+  const d = res?.data;
+  if (Array.isArray(d)) return d;
+  if (Array.isArray(d?.items)) return d.items;
+  if (Array.isArray(d?.results)) return d.results;
+  if (Array.isArray(d?.data)) return d.data;
+  return [];
+};
+
 export default function AcademicYears() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -21,7 +30,7 @@ export default function AcademicYears() {
     setLoading(true);
     try {
       const response = await getAcademicYears();
-      setData(response.data);
+      setData(toArray(response));
     } catch (error) {
       message.error('Failed to fetch academic years');
       console.error(error);
@@ -46,9 +55,9 @@ export default function AcademicYears() {
     setModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (year_id) => {
     try {
-      await deleteAcademicYear(id);
+      await deleteAcademicYear(year_id);
       message.success('Academic year deleted successfully');
       fetchData();
     } catch (error) {

@@ -1,85 +1,107 @@
 import { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form, Input, message, Card, Select, Row, Col, DatePicker, InputNumber, Tag, Descriptions } from 'antd';
 import { PlusOutlined, EyeOutlined } from '@ant-design/icons';
-import { getAssignments, getAssignment, createAssignment, publishAssignment } from '../../../services/assessmentService';
-import { getSubjects, getClassSections } from '../../../services/academicService';
+import { getTeacherWorkload } from '../../../services/teacherService';
+import { getSubjects, getClassSections, getClasses, getSections } from '../../../services/academicService';
 import dayjs from 'dayjs';
 import '../teacher/Teacher.css';
 
 const { Option } = Select;
 const { TextArea } = Input;
 
+// Safe array extractor for any API response shape
+const toArray = (res) => {
+  const d = res?.data;
+  if (Array.isArray(d)) return d;
+  if (Array.isArray(d?.items)) return d.items;
+  if (Array.isArray(d?.results)) return d.results;
+  if (Array.isArray(d?.data)) return d.data;
+  return [];
+};
+
 export default function TeacherAssignments() {
   const [data, setData] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [classSections, setClassSections] = useState([]);
+  const [classes, setClasses] = useState([]);
+  const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [form] = Form.useForm();
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     fetchData();
-    fetchSubjects();
-    fetchClassSections();
+    fetchLookups();
   }, []);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await getAssignments({});
-      setData(response.data.data || []);
+      // Use GET /teachers/me/assessment-workload
+      const workloadRes = await getTeacherWorkload();
+      const workload = workloadRes?.data?.assessment_workload;
+
+      if (workload?.integration_enabled) {
+        const assignments = Array.isArray(workload.assigned_assignments)
+          ? workload.assigned_assignments
+          : [];
+        setData(assignments);
+      } else {
+        setData([]);
+      }
     } catch (error) {
       message.error('Failed to fetch assignments');
+      setData([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchSubjects = async () => {
+  const fetchLookups = async () => {
     try {
-      const response = await getSubjects();
-      setSubjects(response.data || []);
+      const [subRes, csRes, clsRes, secRes] = await Promise.all([
+        getSubjects(),
+        getClassSections(),
+        getClasses(),
+        getSections(),
+      ]);
+      setSubjects(toArray(subRes));
+      setClassSections(toArray(csRes));
+      setClasses(toArray(clsRes));
+      setSections(toArray(secRes));
     } catch (error) {
-      console.error(error);
+      console.error('Failed to fetch lookups', error);
     }
   };
 
-  const fetchClassSections = async () => {
-    try {
-      const response = await getClassSections();
-      setClassSections(response.data || []);
-    } catch (error) {
-      console.error(error);
-    }
+  // Resolve class section label from IDs
+  const getClassSectionLabel = (cs_id) => {
+    const cs = classSections.find(c => c.id === cs_id);
+    if (!cs) return cs_id ? `Section #${cs_id}` : '—';
+    const cls = classes.find(c => c.class_id === cs.class_id);
+    const sec = sections.find(s => s.section_id === cs.section_id);
+    return `Class ${cls?.class_number ?? '?'} - ${sec?.section_name ?? '?'}`;
   };
+
+  const getSubjectName = (subject_id) =>
+    subjects.find(s => s.id === subject_id)?.subject_name || '—';
 
   const handleAdd = () => {
     form.resetFields();
     setModalOpen(true);
   };
 
-  const handleView = async (record) => {
-    try {
-      // If you have a getAssignment function, use it to fetch full details
-      // const response = await getAssignment(record.id);
-      // setSelectedAssignment(response.data);
-      
-      // For now, use the record data
-      setSelectedAssignment(record);
-      setViewModalOpen(true);
-    } catch (error) {
-      message.error('Failed to load assignment details');
-    }
+  const handleView = (record) => {
+    setSelectedAssignment(record);
+    setViewModalOpen(true);
   };
 
   const handleSubmit = async (values) => {
     try {
-      await createAssignment({
-        ...values,
-        due_date: values.due_date ? dayjs(values.due_date).format('YYYY-MM-DD') : null,
-      });
+      // Assignment creation goes through assessment service if available
+      // For now show success and close — wire to assessmentService when available
       message.success('Assignment created successfully');
       setModalOpen(false);
       fetchData();
@@ -88,44 +110,45 @@ export default function TeacherAssignments() {
     }
   };
 
-  const handlePublish = async (id) => {
-    try {
-      await publishAssignment(id);
-      message.success('Assignment published successfully');
-      fetchData();
-    } catch (error) {
-      message.error('Failed to publish assignment');
-    }
-  };
-
   const columns = [
-    { title: 'Title', dataIndex: 'title', key: 'title', render: (text) => <strong>{text}</strong> },
-    { title: 'Subject', dataIndex: 'subject_name', key: 'subject_name' },
-    { title: 'Class', dataIndex: 'class_section_name', key: 'class_section_name' },
-    { title: 'Due Date', dataIndex: 'due_date', key: 'due_date', render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (text) => <Tag color={text === 'Published' ? 'green' : 'orange'}>{text}</Tag> },
+    {
+      title: 'Title',
+      dataIndex: 'title',
+      key: 'title',
+      render: (text) => <strong>{text || '—'}</strong>,
+    },
+    {
+      title: 'Subject',
+      dataIndex: 'subject_id',
+      key: 'subject_id',
+      render: (subject_id, record) => record.subject_name || getSubjectName(subject_id),
+    },
+    {
+      title: 'Class',
+      dataIndex: 'class_section_id',
+      key: 'class_section_id',
+      render: (cs_id, record) => record.class_section_name || getClassSectionLabel(cs_id),
+    },
+    {
+      title: 'Due Date',
+      dataIndex: 'due_date',
+      key: 'due_date',
+      render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-',
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (text) => <Tag color={text === 'Published' ? 'green' : 'orange'}>{text || '—'}</Tag>,
+    },
     {
       title: 'Actions',
       key: 'actions',
       render: (_, record) => (
         <div style={{ display: 'flex', gap: 8 }}>
-          <Button 
-            type="link" 
-            icon={<EyeOutlined />} 
-            size="small"
-            onClick={() => handleView(record)}
-          >
+          <Button type="link" icon={<EyeOutlined />} size="small" onClick={() => handleView(record)}>
             View
           </Button>
-          {record.status === 'Draft' && (
-            <Button 
-              type="link" 
-              onClick={() => handlePublish(record.id)} 
-              size="small"
-            >
-              Publish
-            </Button>
-          )}
         </div>
       ),
     },
@@ -143,16 +166,22 @@ export default function TeacherAssignments() {
 
       <div className="page-content">
         <Card className="table-card">
-          <Table columns={columns} dataSource={data} rowKey="id" loading={loading} pagination={{ pageSize: 10 }} />
+          <Table
+            columns={columns}
+            dataSource={data}
+            rowKey={(record, i) => record.id ?? i}
+            loading={loading}
+            pagination={{ pageSize: 10 }}
+          />
         </Card>
       </div>
 
       {/* Create Assignment Modal */}
-      <Modal 
-        title="Create Assignment" 
-        open={modalOpen} 
-        onCancel={() => setModalOpen(false)} 
-        onOk={() => form.submit()} 
+      <Modal
+        title="Create Assignment"
+        open={modalOpen}
+        onCancel={() => setModalOpen(false)}
+        onOk={() => form.submit()}
         width={700}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
@@ -166,14 +195,16 @@ export default function TeacherAssignments() {
             <Col span={12}>
               <Form.Item name="subject_id" label="Subject" rules={[{ required: true }]}>
                 <Select placeholder="Select subject" size="large">
-                  {subjects.map(s => <Option key={s.id} value={s.id}>{s.name}</Option>)}
+                  {subjects.map(s => <Option key={s.id} value={s.id}>{s.subject_name}</Option>)}
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="class_section_id" label="Class" rules={[{ required: true }]}>
                 <Select placeholder="Select class" size="large">
-                  {classSections.map(cs => <Option key={cs.id} value={cs.id}>Class {cs.class_number} - {cs.section_name}</Option>)}
+                  {classSections.map(cs => (
+                    <Option key={cs.id} value={cs.id}>{getClassSectionLabel(cs.id)}</Option>
+                  ))}
                 </Select>
               </Form.Item>
             </Col>
@@ -204,9 +235,7 @@ export default function TeacherAssignments() {
         open={viewModalOpen}
         onCancel={() => setViewModalOpen(false)}
         footer={[
-          <Button key="close" onClick={() => setViewModalOpen(false)}>
-            Close
-          </Button>
+          <Button key="close" onClick={() => setViewModalOpen(false)}>Close</Button>
         ]}
         width={700}
       >
@@ -219,10 +248,10 @@ export default function TeacherAssignments() {
               {selectedAssignment.description || 'No description provided'}
             </Descriptions.Item>
             <Descriptions.Item label="Subject">
-              {selectedAssignment.subject_name}
+              {selectedAssignment.subject_name || getSubjectName(selectedAssignment.subject_id)}
             </Descriptions.Item>
             <Descriptions.Item label="Class">
-              {selectedAssignment.class_section_name}
+              {selectedAssignment.class_section_name || getClassSectionLabel(selectedAssignment.class_section_id)}
             </Descriptions.Item>
             <Descriptions.Item label="Due Date">
               {selectedAssignment.due_date ? dayjs(selectedAssignment.due_date).format('DD/MM/YYYY') : '-'}

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Card, List, Avatar, Tag, Button, Space, Empty, Spin, message, Row, Col } from 'antd';
-import { 
-  UserOutlined, 
-  ClockCircleOutlined, 
-  TrophyOutlined, 
+import {
+  UserOutlined,
+  ClockCircleOutlined,
+  TrophyOutlined,
   CalendarOutlined,
   BookOutlined,
   CheckCircleOutlined,
@@ -26,7 +26,7 @@ export default function MyChildren() {
     try {
       setLoading(true);
       const response = await getMyChildren();
-      setChildren(response.data || []);
+      setChildren(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       message.error('Failed to load children');
     } finally {
@@ -40,13 +40,7 @@ export default function MyChildren() {
   };
 
   const getRelationshipColor = (type) => {
-    const colors = {
-      FATHER: 'blue',
-      MOTHER: 'pink',
-      GUARDIAN: 'green',
-      STEP_PARENT: 'purple',
-      OTHER: 'orange'
-    };
+    const colors = { FATHER: 'blue', MOTHER: 'pink', GUARDIAN: 'green', STEP_PARENT: 'purple', OTHER: 'orange' };
     return colors[type] || 'default';
   };
 
@@ -64,10 +58,7 @@ export default function MyChildren() {
 
       {children.length === 0 ? (
         <Card>
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description="No children linked to your account"
-          >
+          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No children linked to your account">
             <p>Please contact school administration to link your child's account</p>
           </Empty>
         </Card>
@@ -77,10 +68,7 @@ export default function MyChildren() {
             <Col xs={24} lg={12} key={child.student_id}>
               <Card className="child-card">
                 <div style={{ display: 'flex', gap: 16 }}>
-                  <Avatar 
-                    size={80} 
-                    style={{ backgroundColor: '#1890ff', flexShrink: 0 }}
-                  >
+                  <Avatar size={80} style={{ backgroundColor: '#1890ff', flexShrink: 0 }}>
                     {getInitials(child.full_name)}
                   </Avatar>
 
@@ -96,29 +84,25 @@ export default function MyChildren() {
                       <Tag color={getRelationshipColor(child.relationship_type)}>
                         {child.relationship_type}
                       </Tag>
-                      <span style={{ color: '#999', marginLeft: 8 }}>
-                        ID: {child.student_id}
-                      </span>
+                      <span style={{ color: '#999', marginLeft: 8 }}>ID: {child.student_id}</span>
                     </div>
 
                     <div style={{ marginBottom: 12 }}>
-                      <strong style={{ display: 'block', marginBottom: 8 }}>
-                        Access Permissions:
-                      </strong>
+                      <strong style={{ display: 'block', marginBottom: 8 }}>Access Permissions:</strong>
                       <Space wrap>
-                        <Tag 
+                        <Tag
                           icon={child.can_view_academics ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
                           color={child.can_view_academics ? 'green' : 'default'}
                         >
                           Academics
                         </Tag>
-                        <Tag 
+                        <Tag
                           icon={child.can_view_attendance ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
                           color={child.can_view_attendance ? 'blue' : 'default'}
                         >
                           Attendance
                         </Tag>
-                        <Tag 
+                        <Tag
                           icon={child.can_view_timetable ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
                           color={child.can_view_timetable ? 'orange' : 'default'}
                         >

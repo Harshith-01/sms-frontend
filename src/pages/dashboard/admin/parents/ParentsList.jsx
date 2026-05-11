@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Table, Button, Input, Space, Tag, Popconfirm, message, Card, Select, Row, Col } from 'antd';
-import { 
-  PlusOutlined, 
-  SearchOutlined, 
-  EditOutlined, 
-  DeleteOutlined, 
+import {
+  PlusOutlined,
+  SearchOutlined,
+  EditOutlined,
+  DeleteOutlined,
   EyeOutlined,
   LinkOutlined,
   UserOutlined,
@@ -17,6 +17,15 @@ import './Parents.css';
 
 const { Search } = Input;
 const { Option } = Select;
+
+const toArray = (res) => {
+  const d = res?.data;
+  if (Array.isArray(d)) return d;
+  if (Array.isArray(d?.items)) return d.items;
+  if (Array.isArray(d?.results)) return d.results;
+  if (Array.isArray(d?.data)) return d.data;
+  return [];
+};
 
 export default function ParentsList() {
   const navigate = useNavigate();
@@ -38,24 +47,29 @@ export default function ParentsList() {
     try {
       setLoading(true);
       const offset = (pagination.current - 1) * pagination.pageSize;
-      const response = await getParents({
-        is_active: filterStatus,
+      const params = {
         limit: pagination.pageSize,
-        offset: offset,
-      });
-      
-      setParents(response.data || []);
-      setPagination(prev => ({ ...prev, total: response.data?.length || 0 }));
+        offset,
+      };
+      // Only send is_active if a specific filter is chosen (not null = all)
+      if (filterStatus !== null) {
+        params.is_active = filterStatus;
+      }
+      const response = await getParents(params);
+      const data = toArray(response);
+      setParents(data);
+      setPagination(prev => ({ ...prev, total: response.data?.total || data.length }));
     } catch (error) {
       message.error(error.response?.data?.detail || 'Failed to load parents');
+      setParents([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeactivate = async (parentId) => {
+  const handleDeactivate = async (parent_id) => {
     try {
-      await deactivateParent(parentId);
+      await deactivateParent(parent_id);
       message.success('Parent deactivated successfully');
       fetchParents();
     } catch (error) {
@@ -63,8 +77,8 @@ export default function ParentsList() {
     }
   };
 
-  const handleTableChange = (pagination) => {
-    setPagination(pagination);
+  const handleTableChange = (newPagination) => {
+    setPagination(newPagination);
   };
 
   const filteredParents = parents.filter(parent => {

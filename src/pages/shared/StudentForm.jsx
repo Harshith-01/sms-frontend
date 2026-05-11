@@ -39,12 +39,16 @@ export default function StudentForm({ mode = 'view' }) {
 
   useEffect(() => {
     if (isAddMode) {
-      setLoading(false);
-    } else if (id) {
-      fetchStudent();
-    } else {
-      const userId = localStorage.getItem('userId');
-      if (userId) fetchStudent(userId);
+      return;
+    }
+
+    if (id) {
+      fetchStudent(id);
+    } else if (!isAddMode) {
+      const userId = localStorage.getItem("userId");
+      if (userId) {
+        fetchStudent(userId);
+      }
     }
   }, [id, mode]);
 
@@ -52,13 +56,69 @@ export default function StudentForm({ mode = 'view' }) {
     setLoading(true);
     try {
       const response = await getStudentById(studentId || id);
-      setStudent(response.data);
-      form.setFieldsValue({
-        ...response.data,
-        dob: response.data.dob ? dayjs(response.data.dob) : null,
-        enrollment_date: response.data.enrollment_date ? dayjs(response.data.enrollment_date) : null,
-        admission_date: response.data.admission_date ? dayjs(response.data.admission_date) : null,
+      const data = response.data;
+
+      // Map nested response structure to flat form fields
+      const flat = {
+        // basic
+        student_id: data.basic?.student_id,
+        admission_number: data.basic?.admission_number,
+        full_name: data.basic?.full_name,
+        gender: data.basic?.gender,
+        nationality: data.basic?.nationality,
+        blood_group: data.basic?.blood_group,
+        aadhaar_number: data.basic?.aadhaar_number,
+        dob: data.basic?.date_of_birth ? dayjs(data.basic.date_of_birth) : null,
+
+        // contact
+        email: data.contact?.email,
+        contact_number: data.contact?.contact_number,
+        alternate_number: data.contact?.alternate_number,
+        current_address: data.contact?.current_address,
+        permanent_address: data.contact?.permanent_address,
+        city: data.contact?.city,
+        state: data.contact?.state,
+        pin_code: data.contact?.pin_code,
+
+        // parent
+        father_name: data.parent?.father_name,
+        mother_name: data.parent?.mother_name,
+        guardian_name: data.parent?.guardian_name,
+        primary_contact: data.parent?.primary_contact,
+        parent_email: data.parent?.email,
+        occupation: data.parent?.occupation,
+        annual_income: data.parent?.annual_income,
+
+        // academic_current
+        program_name: data.academic_current?.program_name,
+        department: data.academic_current?.department,
+        class_section_id: data.academic_current?.class_section_id,
+        semester_year: data.academic_current?.semester_year,
+        subjects: data.academic_current?.subjects,
+        enrollment_date: data.academic_current?.enrollment_date ? dayjs(data.academic_current.enrollment_date) : null,
+        previous_college: data.academic_current?.previous_college,
+        previous_marks: data.academic_current?.previous_marks,
+        academic_status: data.academic_current?.academic_status,
+        academic_year: data.academic_current?.academic_year,
+
+        // admission_records[0]
+        admission_date: data.admission_records?.[0]?.admission_date ? dayjs(data.admission_records[0].admission_date) : null,
+        admission_type: data.admission_records?.[0]?.admission_type,
+        entrance_exam: data.admission_records?.[0]?.entrance_exam,
+        rank: data.admission_records?.[0]?.rank,
+        admission_category: data.admission_records?.[0]?.admission_category,
+        fees_payment_status: data.admission_records?.[0]?.fees_payment_status,
+        scholarship_details: data.admission_records?.[0]?.scholarship_details,
+      };
+
+      setStudent({
+        ...flat,
+        student_id: data.basic?.student_id,
+        admission_id: data.admission_records?.[0]?.id,
+        photo_url: data.basic?.photo_url,
       });
+
+      form.setFieldsValue(flat);
     } catch (error) {
       message.error('Failed to fetch student details');
       console.error(error);
@@ -71,31 +131,105 @@ export default function StudentForm({ mode = 'view' }) {
     setSaving(true);
     try {
       if (isAddMode) {
-        // Backend auto-generates password, we send all basic info
         const data = {
-          admission_number: values.admission_number,
-          full_name: values.full_name,
-          email: values.email,
-          dob: values.dob ? dayjs(values.dob).format('YYYY-MM-DD') : null,
-          gender: values.gender,
-          nationality: values.nationality,
-          blood_group: values.blood_group || null,
-          aadhaar_number: values.aadhaar_number || null,
+          basic: {
+            admission_number: values.admission_number,
+            full_name: values.full_name,
+            date_of_birth: values.dob ? dayjs(values.dob).format("YYYY-MM-DD") : null,
+            gender: values.gender,
+            nationality: values.nationality,
+            blood_group: values.blood_group || null,
+            aadhaar_number: values.aadhaar_number || null,
+          },
+          contact: {
+            email: values.email,
+            contact_number: values.contact_number || "9999999999",
+          },
+          parent: {},
+          academic: {},
+          admission: {},
         };
+
         await createStudent(data);
-        message.success('Student added successfully. Temporary password sent to email.');
-        navigate('/admin/onboarding/students');
+        message.success("Student added successfully");
+        navigate("/admin/onboarding/students");
       } else if (isEditMode) {
-        if (activeTab === '1') await updateStudentBasic(id, { admission_number: values.admission_number, full_name: values.full_name, dob: values.dob ? dayjs(values.dob).format('YYYY-MM-DD') : null, gender: values.gender, nationality: values.nationality, blood_group: values.blood_group, aadhaar_number: values.aadhaar_number });
-        else if (activeTab === '2') await updateStudentContact(id, { email: values.email, contact_number: values.contact_number, alternate_number: values.alternate_number, current_address: values.current_address, permanent_address: values.permanent_address, city: values.city, state: values.state, pin_code: values.pin_code });
-        else if (activeTab === '3') await updateStudentParent(id, { father_name: values.father_name, mother_name: values.mother_name, guardian_name: values.guardian_name, primary_contact: values.primary_contact, parent_email: values.parent_email, occupation: values.occupation, annual_income: values.annual_income });
-        else if (activeTab === '4') await updateStudentAcademic(id, { program_name: values.program_name, department: values.department, class_id: values.class_id, section_id: values.section_id, semester_year: values.semester_year, subjects: values.subjects, enrollment_date: values.enrollment_date ? dayjs(values.enrollment_date).format('YYYY-MM-DD') : null, previous_college: values.previous_college, previous_marks: values.previous_marks, academic_status: values.academic_status, academic_year: values.academic_year });
-        else if (activeTab === '5') await updateStudentAdmission(id, { admission_date: values.admission_date ? dayjs(values.admission_date).format('YYYY-MM-DD') : null, admission_type: values.admission_type, entrance_exam: values.entrance_exam, rank: values.rank, admission_category: values.admission_category, fees_payment_status: values.fees_payment_status, scholarship_details: values.scholarship_details });
-        message.success('Student updated successfully');
-        navigate(`/admin/onboarding/students/${id}`);
+        const studentId = id;
+
+        if (activeTab === "1") {
+          await updateStudentBasic(studentId, {
+            admission_number: values.admission_number,
+            full_name: values.full_name,
+            date_of_birth: values.dob ? dayjs(values.dob).format("YYYY-MM-DD") : null,
+            gender: values.gender,
+            nationality: values.nationality,
+            blood_group: values.blood_group,
+            aadhaar_number: values.aadhaar_number,
+          });
+        }
+
+        else if (activeTab === "2") {
+          await updateStudentContact(studentId, {
+            email: values.email,
+            contact_number: values.contact_number,
+            alternate_number: values.alternate_number,
+            current_address: values.current_address,
+            permanent_address: values.permanent_address,
+            city: values.city,
+            state: values.state,
+            pin_code: values.pin_code,
+          });
+        }
+
+        else if (activeTab === "3") {
+          await updateStudentParent(studentId, {
+            father_name: values.father_name,
+            mother_name: values.mother_name,
+            guardian_name: values.guardian_name,
+            primary_contact: values.primary_contact,
+            email: values.parent_email,
+            occupation: values.occupation,
+            annual_income: values.annual_income,
+          });
+        }
+
+        else if (activeTab === "4") {
+          await updateStudentAcademic(studentId, {
+            program_name: values.program_name,
+            department: values.department,
+            class_section_id: values.class_section_id,
+            semester_year: values.semester_year,
+            subjects: values.subjects,
+            enrollment_date: values.enrollment_date ? dayjs(values.enrollment_date).format("YYYY-MM-DD") : null,
+            previous_college: values.previous_college,
+            previous_marks: values.previous_marks,
+            academic_status: values.academic_status,
+          });
+        }
+
+        else if (activeTab === "5") {
+          await updateStudentAdmission(
+            studentId,
+            student?.admission_id,
+            {
+              admission_date: values.admission_date ? dayjs(values.admission_date).format("YYYY-MM-DD") : null,
+              admission_type: values.admission_type,
+              entrance_exam: values.entrance_exam,
+              rank: values.rank,
+              admission_category: values.admission_category,
+              fees_payment_status: values.fees_payment_status,
+              scholarship_details: values.scholarship_details,
+            }
+          );
+        }
+
+        message.success("Student updated successfully");
+        navigate(`/admin/onboarding/students/${studentId}`);
       }
     } catch (error) {
-      message.error(isAddMode ? 'Failed to add student' : 'Failed to update student');
+      message.error(
+        isAddMode ? "Failed to add student" : "Failed to update student"
+      );
       console.error(error);
     } finally {
       setSaving(false);
@@ -179,7 +313,7 @@ export default function StudentForm({ mode = 'view' }) {
                 {renderField('Blood Group', '', 'blood_group', 'select', ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'], false)}
                 {renderField('Aadhaar Number', '', 'aadhaar_number', 'text', [], false)}
               </Row>
-              
+
               <Row gutter={16} style={{ marginTop: 32 }}>
                 <Col>
                   <Button type="primary" htmlType="submit" icon={<SaveOutlined />} size="large" loading={saving}>
@@ -267,8 +401,7 @@ export default function StudentForm({ mode = 'view' }) {
                   <>
                     {renderField('Program Name', student?.program_name, 'program_name')}
                     {renderField('Department', student?.department, 'department')}
-                    {renderField('Class', student?.class_id, 'class_id')}
-                    {renderField('Section', student?.section_id, 'section_id')}
+                    {renderField('Class', student?.class_section_id, 'class_section_id')}
                     {renderField('Semester/Year', student?.semester_year, 'semester_year')}
                     {renderField('Subjects', student?.subjects, 'subjects')}
                     {renderField('Enrollment Date', student?.enrollment_date ? dayjs(student.enrollment_date).format('DD/MM/YYYY') : '', 'enrollment_date', 'date')}

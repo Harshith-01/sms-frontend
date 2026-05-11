@@ -13,8 +13,8 @@ export const getStudents = async (filters = {}) => {
 };
 
 // Get student by ID
-export const getStudentById = async (id) => {
-  return api.get(`/students/${id}`);
+export const getStudentById = async (student_id) => {
+  return api.get(`/students/${student_id}`);
 };
 
 // Get logged-in student profile
@@ -28,8 +28,8 @@ export const createStudent = async (data) => {
 };
 
 // Delete student
-export const deleteStudent = async (id) => {
-  return api.delete(`/students/${id}`);
+export const deleteStudent = async (student_id) => {
+  return api.delete(`/students/${student_id}`);
 };
 
 // Bulk upload
@@ -46,22 +46,21 @@ export const bulkUploadStudents = async (file) => {
 
 // ==================== UPDATE APIs ====================
 
-export const updateStudentBasic = (id, data) =>
-  api.put(`/students/${id}/basic`, data);
+export const updateStudentBasic = (student_id, data) =>
+  api.put(`/students/${student_id}/basic`, data);
 
-export const updateStudentContact = (id, data) =>
-  api.put(`/students/${id}/contact`, data);
+export const updateStudentContact = (student_id, data) =>
+  api.put(`/students/${student_id}/contact`, data);
 
-export const updateStudentParent = (id, data) =>
-  api.put(`/students/${id}/parent`, data);
+export const updateStudentParent = (student_id, data) =>
+  api.put(`/students/${student_id}/parent`, data);
 
-export const updateStudentAcademic = (id, data) =>
-  api.put(`/students/${id}/academic`, data);
+export const updateStudentAcademic = (student_id, data) =>
+  api.put(`/students/${student_id}/academic`, data);
 
-export const updateStudentAdmission = (id, data) =>
-  api.put(`/students/${id}/admission`, data);
-
-// ==================== EXPORT ====================
+// ✅ FIXED: requires admission_id
+export const updateStudentAdmission = (student_id, admission_id, data) =>
+  api.put(`/students/${student_id}/admission/${admission_id}`, data);
 
 export default {
   getStudents,

@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Card, Row, Col, Statistic, Table, Tag, Button, message } from 'antd';
 import { BookOutlined, FileTextOutlined, UserOutlined, CheckCircleOutlined, TeamOutlined, CalendarOutlined, ClockCircleOutlined } from '@ant-design/icons';
-import { getAssignments, getExams } from '../../../services/assessmentService';
+import { getTeacherWorkload } from '../../../services/teacherService';
 import dayjs from 'dayjs';
 import './TeacherDashboard.css';
 
 export default function TeacherDashboard() {
   const [stats, setStats] = useState({
-    totalStudents: 156,
-    totalClasses: 6,
+    totalStudents: 0,
+    totalClasses: 0,
     totalAssignments: 0,
     totalExams: 0,
-    pendingGrading: 23,
-    avgAttendance: 88,
+    pendingGrading: 0,
+    avgAttendance: 0,
   });
   const [recentAssignments, setRecentAssignments] = useState([]);
   const [upcomingExams, setUpcomingExams] = useState([]);
@@ -25,15 +25,28 @@ export default function TeacherDashboard() {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const assignmentsRes = await getAssignments({}, 1, 5);
-      setRecentAssignments(assignmentsRes.data.data || []);
-      setStats(prev => ({ ...prev, totalAssignments: assignmentsRes.data.total || 0 }));
+      // Use GET /teachers/me/assessment-workload
+      const workloadRes = await getTeacherWorkload();
+      const workload = workloadRes?.data?.assessment_workload;
 
-      const examsRes = await getExams({}, 1, 5);
-      setUpcomingExams(examsRes.data.data || []);
-      setStats(prev => ({ ...prev, totalExams: examsRes.data.total || 0 }));
+      if (workload?.integration_enabled) {
+        const assignments = Array.isArray(workload.assigned_assignments)
+          ? workload.assigned_assignments
+          : [];
+        const examSubjects = Array.isArray(workload.evaluated_exam_subjects)
+          ? workload.evaluated_exam_subjects
+          : [];
+
+        setRecentAssignments(assignments.slice(0, 5));
+        setUpcomingExams(examSubjects.slice(0, 5));
+        setStats(prev => ({
+          ...prev,
+          totalAssignments: assignments.length,
+          totalExams: examSubjects.length,
+        }));
+      }
     } catch (error) {
-      console.error('Failed to fetch dashboard data');
+      console.error('Failed to fetch dashboard data', error);
     } finally {
       setLoading(false);
     }
@@ -94,16 +107,16 @@ export default function TeacherDashboard() {
   ];
 
   const assignmentColumns = [
-    { title: 'Assignment', dataIndex: 'title', key: 'title', render: (text) => <strong>{text}</strong> },
-    { title: 'Class', dataIndex: 'class_section_name', key: 'class_section_name' },
+    { title: 'Assignment', dataIndex: 'title', key: 'title', render: (text) => <strong>{text || '—'}</strong> },
+    { title: 'Class', dataIndex: 'class_section_name', key: 'class_section_name', render: (v) => v || '—' },
     { title: 'Due Date', dataIndex: 'due_date', key: 'due_date', render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (text) => <Tag color={text === 'Published' ? 'green' : 'orange'}>{text}</Tag> },
+    { title: 'Status', dataIndex: 'status', key: 'status', render: (text) => <Tag color={text === 'Published' ? 'green' : 'orange'}>{text || '—'}</Tag> },
   ];
 
   const examColumns = [
-    { title: 'Exam', dataIndex: 'exam_name', key: 'exam_name', render: (text) => <strong>{text}</strong> },
+    { title: 'Exam', dataIndex: 'exam_name', key: 'exam_name', render: (text) => <strong>{text || '—'}</strong> },
     { title: 'Date', dataIndex: 'start_date', key: 'start_date', render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (text) => <Tag>{text}</Tag> },
+    { title: 'Status', dataIndex: 'status', key: 'status', render: (text) => <Tag>{text || '—'}</Tag> },
   ];
 
   return (
@@ -189,7 +202,7 @@ export default function TeacherDashboard() {
         <Table
           columns={assignmentColumns}
           dataSource={recentAssignments}
-          rowKey="id"
+          rowKey={(record, index) => record.id ?? index}
           loading={loading}
           pagination={false}
         />
@@ -200,7 +213,7 @@ export default function TeacherDashboard() {
         <Table
           columns={examColumns}
           dataSource={upcomingExams}
-          rowKey="id"
+          rowKey={(record, index) => record.id ?? index}
           loading={loading}
           pagination={false}
         />

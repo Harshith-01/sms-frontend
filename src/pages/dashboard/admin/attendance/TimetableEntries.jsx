@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form, message, Card, Select, Input } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { getTimetableEntries, createTimetableEntry } from '../../../../services/attendanceService';
-import { getClassSections, getAcademicTerms, getSubjects, getTeachers } from '../../../../services/academicService';
+import { getTeachers } from '../../../../services/teacherService';
+import {  getSubjects, getClassSections, getAcademicTerms } from '../../../../services/academicService';
+
 import './Attendance.css';
 
 const { Option } = Select;

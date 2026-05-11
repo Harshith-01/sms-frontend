@@ -1,30 +1,26 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Tabs,
-  Card,
-  Button,
-  Space,
-  Spin,
-  message,
-  Form,
-  Input,
-  Select,
-  DatePicker,
-  Row,
-  Col,
-  Avatar,
-  Divider,
-  Empty,
-  Radio,
+  Tabs, Card, Button, Space, Spin, message, Form, Input,
+  Select, DatePicker, Row, Col, Avatar, Divider, Empty, Radio,
 } from 'antd';
 import { EditOutlined, SaveOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { getTeacherById, createTeacher, updateTeacher } from '../../services/teacherService';
+import { getDepartments } from '../../services/academicService';
 import dayjs from 'dayjs';
 import './Form.css';
 
 const { Option } = Select;
 const { TextArea } = Input;
+
+const toArray = (res) => {
+  const d = res?.data;
+  if (Array.isArray(d)) return d;
+  if (Array.isArray(d?.items)) return d.items;
+  if (Array.isArray(d?.results)) return d.results;
+  if (Array.isArray(d?.data)) return d.data;
+  return [];
+};
 
 export default function TeacherForm({ mode = 'view' }) {
   const { id } = useParams();
@@ -34,16 +30,31 @@ export default function TeacherForm({ mode = 'view' }) {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('1');
   const [saving, setSaving] = useState(false);
+  const [departments, setDepartments] = useState([]);
 
   const isAddMode = mode === 'add';
   const isEditMode = mode === 'edit';
   const isViewMode = mode === 'view';
 
   useEffect(() => {
+    // Fetch departments from academic service — NOT teacher service
+    const fetchDepts = async () => {
+      try {
+        const response = await getDepartments();
+        setDepartments(toArray(response));
+      } catch (err) {
+        console.error('Failed to fetch departments from academic service', err);
+        setDepartments([]);
+      }
+    };
+    fetchDepts();
+  }, []);
+
+  useEffect(() => {
     if (isAddMode) {
       setLoading(false);
     } else if (id) {
-      fetchTeacher();
+      fetchTeacher(id);
     } else {
       const userId = localStorage.getItem('userId');
       if (userId) fetchTeacher(userId);
@@ -53,12 +64,28 @@ export default function TeacherForm({ mode = 'view' }) {
   const fetchTeacher = async (teacherId) => {
     setLoading(true);
     try {
-      const response = await getTeacherById(teacherId || id);
-      setTeacher(response.data);
-      form.setFieldsValue({
-        ...response.data,
-        date_of_joining: response.data.date_of_joining ? dayjs(response.data.date_of_joining) : null,
-      });
+      const response = await getTeacherById(teacherId);
+      const data = response.data;
+
+      // Backend returns nested: { details: {...}, qualifications: [], academics: [] }
+      const flat = {
+        teacher_id: data.details?.id,
+        full_name: data.details?.full_name,
+        email_id: data.details?.email_id,
+        contact_number: data.details?.contact_number,
+        designation: data.details?.designation,
+        department_id: data.details?.department_id,
+        employment_type: data.details?.employment_type,
+        communication_address: data.details?.communication_address,
+        status: data.details?.status,
+        date_of_joining: data.details?.date_of_joining ? dayjs(data.details.date_of_joining) : null,
+        qualifications: data.qualifications || [],
+        academics: data.academics || [],
+        photo_url: data.details?.photo_url,
+      };
+
+      setTeacher(flat);
+      form.setFieldsValue(flat);
     } catch (error) {
       message.error('Failed to fetch teacher details');
       console.error(error);
@@ -71,9 +98,22 @@ export default function TeacherForm({ mode = 'view' }) {
     setSaving(true);
     try {
       const data = {
-        ...values,
-        date_of_joining: values.date_of_joining ? dayjs(values.date_of_joining).format('YYYY-MM-DD') : null,
+        full_name: values.full_name,
+        email_id: values.email_id,
+        contact_number: values.contact_number || null,
+        communication_address: values.communication_address || null,
+        designation: values.designation || null,
+        department_id: values.department_id ? Number(values.department_id) : null,
+        employment_type: values.employment_type || null,
+        date_of_joining: values.date_of_joining
+          ? dayjs(values.date_of_joining).format('YYYY-MM-DD')
+          : null,
       };
+
+      // status only allowed on update (TeacherCreate schema has no status field)
+      if (isEditMode) {
+        data.status = values.status || 'ACTIVE';
+      }
 
       if (isAddMode) {
         await createTeacher(data);
@@ -85,8 +125,25 @@ export default function TeacherForm({ mode = 'view' }) {
         navigate(`/admin/onboarding/teachers/${id}`);
       }
     } catch (error) {
-      message.error(isAddMode ? 'Failed to add teacher' : 'Failed to update teacher');
-      console.error(error);
+      const status = error.response?.status;
+      const detail = error.response?.data?.detail;
+
+      if (status === 409) {
+        message.error(
+          typeof detail === 'string'
+            ? detail
+            : 'A teacher with this email already exists. Please use a different email.'
+        );
+      } else if (Array.isArray(detail)) {
+        detail.forEach((err) => {
+          message.error(`Field "${err.loc?.slice(1).join('.')}" — ${err.msg}`);
+        });
+      } else if (typeof detail === 'string') {
+        message.error(detail);
+      } else {
+        message.error(isAddMode ? 'Failed to add teacher' : 'Failed to update teacher');
+      }
+      console.error('API error response:', error.response?.data);
     } finally {
       setSaving(false);
     }
@@ -146,7 +203,7 @@ export default function TeacherForm({ mode = 'view' }) {
                     <Col xs={24} sm={12} lg={8}>
                       <div className="field-group">
                         <label className="field-label">Teacher ID</label>
-                        <div className="field-value static">{teacher.id}</div>
+                        <div className="field-value static">{teacher.teacher_id}</div>
                       </div>
                     </Col>
                   )}
@@ -166,9 +223,9 @@ export default function TeacherForm({ mode = 'view' }) {
                     <div className="field-group">
                       <label className="field-label">Email</label>
                       {isViewMode ? (
-                        <div className="field-value">{teacher?.email}</div>
+                        <div className="field-value">{teacher?.email_id}</div>
                       ) : (
-                        <Form.Item name="email" noStyle rules={[{ required: true, type: 'email', message: 'Valid email required' }]}>
+                        <Form.Item name="email_id" noStyle rules={[{ required: true, type: 'email', message: 'Valid email required' }]}>
                           <Input className="field-input" placeholder="Enter email" />
                         </Form.Item>
                       )}
@@ -178,9 +235,9 @@ export default function TeacherForm({ mode = 'view' }) {
                     <div className="field-group">
                       <label className="field-label">Contact Number</label>
                       {isViewMode ? (
-                        <div className="field-value">{teacher?.phone_number || '—'}</div>
+                        <div className="field-value">{teacher?.contact_number || '—'}</div>
                       ) : (
-                        <Form.Item name="phone_number" noStyle>
+                        <Form.Item name="contact_number" noStyle>
                           <Input className="field-input" placeholder="Enter contact number" />
                         </Form.Item>
                       )}
@@ -207,15 +264,17 @@ export default function TeacherForm({ mode = 'view' }) {
                     <div className="field-group">
                       <label className="field-label">Department</label>
                       {isViewMode ? (
-                        <div className="field-value"><span className="badge badge-purple">{teacher?.department || '—'}</span></div>
+                        <div className="field-value">
+                          <span className="badge badge-purple">
+                            {departments.find(d => d.id === teacher?.department_id)?.name || teacher?.department_id || '—'}
+                          </span>
+                        </div>
                       ) : (
-                        <Form.Item name="department" noStyle>
+                        <Form.Item name="department_id" noStyle>
                           <Select className="field-input" placeholder="Select department">
-                            <Option value="Mathematics">Mathematics</Option>
-                            <Option value="English">English</Option>
-                            <Option value="Science">Science</Option>
-                            <Option value="Physics">Physics</Option>
-                            <Option value="Chemistry">Chemistry</Option>
+                            {departments.map((dept) => (
+                              <Option key={dept.id} value={dept.id}>{dept.name}</Option>
+                            ))}
                           </Select>
                         </Form.Item>
                       )}
@@ -225,7 +284,11 @@ export default function TeacherForm({ mode = 'view' }) {
                     <div className="field-group">
                       <label className="field-label">Employment Type</label>
                       {isViewMode ? (
-                        <div className="field-value"><span className={`badge ${teacher?.employment_type === 'Permanent' ? 'badge-green' : 'badge-orange'}`}>{teacher?.employment_type || '—'}</span></div>
+                        <div className="field-value">
+                          <span className={`badge ${teacher?.employment_type === 'Permanent' ? 'badge-green' : 'badge-orange'}`}>
+                            {teacher?.employment_type || '—'}
+                          </span>
+                        </div>
                       ) : (
                         <Form.Item name="employment_type" noStyle>
                           <Radio.Group>
@@ -240,7 +303,9 @@ export default function TeacherForm({ mode = 'view' }) {
                     <div className="field-group">
                       <label className="field-label">Date of Joining</label>
                       {isViewMode ? (
-                        <div className="field-value">{teacher?.date_of_joining ? dayjs(teacher.date_of_joining).format('DD/MM/YYYY') : '—'}</div>
+                        <div className="field-value">
+                          {teacher?.date_of_joining ? dayjs(teacher.date_of_joining).format('DD/MM/YYYY') : '—'}
+                        </div>
                       ) : (
                         <Form.Item name="date_of_joining" noStyle>
                           <DatePicker format="DD/MM/YYYY" className="field-input" style={{ width: '100%' }} />
@@ -253,12 +318,16 @@ export default function TeacherForm({ mode = 'view' }) {
                       <div className="field-group">
                         <label className="field-label">Status</label>
                         {isViewMode ? (
-                          <div className="field-value"><span className={`badge ${teacher?.is_active ? 'badge-success' : 'badge-error'}`}>{teacher?.is_active ? 'Active' : 'Inactive'}</span></div>
+                          <div className="field-value">
+                            <span className={`badge ${teacher?.status === 'ACTIVE' ? 'badge-success' : 'badge-error'}`}>
+                              {teacher?.status === 'ACTIVE' ? 'Active' : 'Inactive'}
+                            </span>
+                          </div>
                         ) : (
-                          <Form.Item name="is_active" noStyle>
+                          <Form.Item name="status" noStyle>
                             <Select className="field-input">
-                              <Option value={true}>Active</Option>
-                              <Option value={false}>Inactive</Option>
+                              <Option value="ACTIVE">Active</Option>
+                              <Option value="INACTIVE">Inactive</Option>
                             </Select>
                           </Form.Item>
                         )}
@@ -269,9 +338,9 @@ export default function TeacherForm({ mode = 'view' }) {
                     <div className="field-group">
                       <label className="field-label">Communication Address</label>
                       {isViewMode ? (
-                        <div className="field-value">{teacher?.address || '—'}</div>
+                        <div className="field-value">{teacher?.communication_address || '—'}</div>
                       ) : (
-                        <Form.Item name="address" noStyle>
+                        <Form.Item name="communication_address" noStyle>
                           <TextArea rows={2} className="field-input" placeholder="Enter address" />
                         </Form.Item>
                       )}
@@ -281,7 +350,7 @@ export default function TeacherForm({ mode = 'view' }) {
               </div>
             </div>
             {isAddMode && (
-              <Row gutter={16} style={{ marginTop: 32 }}>
+              <Row gutter={16} style={{ marginTop: 32 }} justify="center">
                 <Col>
                   <Button type="primary" htmlType="submit" icon={<SaveOutlined />} size="large" loading={saving}>
                     Add Teacher

@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Card, Descriptions, Button, Form, Input, Select, DatePicker, message, Spin, Tag } from 'antd';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { getStaffById, updateStaff, getDesignations, getDepartments } from '../../../../services/staffService';
+import { getStaffById, updateStaff, getDesignations } from '../../../../services/staffService';
+import { getDepartments } from '../../../../services/academicService';
 import { ArrowLeftOutlined, EditOutlined, SaveOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import './Staff.css';
 
 export default function StaffDetails() {
-  const { id } = useParams();
+  const { id } = useParams(); // id = staff_id
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [form] = Form.useForm();
-  
+
   const [staff, setStaff] = useState(null);
   const [designations, setDesignations] = useState([]);
   const [departments, setDepartments] = useState([]);
@@ -20,6 +21,11 @@ export default function StaffDetails() {
   const [isEditMode, setIsEditMode] = useState(searchParams.get('mode') === 'edit');
 
   useEffect(() => {
+    if (!id) {
+      message.error('Invalid staff ID');
+      navigate('/admin/staff');
+      return;
+    }
     fetchStaff();
     fetchDesignations();
     fetchDepartments();
@@ -28,9 +34,19 @@ export default function StaffDetails() {
   useEffect(() => {
     if (staff && isEditMode) {
       form.setFieldsValue({
-        ...staff,
+        full_name: staff.full_name,
+        email: staff.email,
+        contact_number: staff.contact_number,
+        emergency_contact: staff.emergency_contact,
+        date_of_birth: staff.date_of_birth ? dayjs(staff.date_of_birth) : null,
+        gender: staff.gender,
+        aadhaar_number: staff.aadhaar_number,
+        designation_id: staff.designation_id,
+        department_id: staff.department_id,
+        employment_type: staff.employment_type,
         date_of_joining: staff.date_of_joining ? dayjs(staff.date_of_joining) : null,
-        date_of_birth: staff.date_of_birth ? dayjs(staff.date_of_birth) : null
+        status: staff.status,
+        address: staff.address,
       });
     }
   }, [staff, isEditMode, form]);
@@ -51,7 +67,8 @@ export default function StaffDetails() {
   const fetchDesignations = async () => {
     try {
       const response = await getDesignations();
-      setDesignations(response.data || []);
+      const d = response.data;
+      setDesignations(Array.isArray(d) ? d : d?.items || d?.results || []);
     } catch (error) {
       console.error('Failed to load designations');
     }
@@ -60,7 +77,8 @@ export default function StaffDetails() {
   const fetchDepartments = async () => {
     try {
       const response = await getDepartments();
-      setDepartments(response.data || []);
+      const d = response.data;
+      setDepartments(Array.isArray(d) ? d : d?.items || d?.results || []);
     } catch (error) {
       console.error('Failed to load departments');
     }
@@ -69,18 +87,34 @@ export default function StaffDetails() {
   const handleSave = async (values) => {
     try {
       setSaving(true);
-      const data = {
-        ...values,
+      // Explicit payload — PUT /staff/{staff_id}, all fields optional
+      const payload = {
+        full_name: values.full_name,
+        email: values.email,
+        contact_number: values.contact_number || null,
+        emergency_contact: values.emergency_contact || null,
+        designation_id: values.designation_id ? Number(values.designation_id) : null,
+        department_id: values.department_id ? Number(values.department_id) : null,
+        address: values.address || null,
         date_of_joining: values.date_of_joining ? values.date_of_joining.format('YYYY-MM-DD') : null,
-        date_of_birth: values.date_of_birth ? values.date_of_birth.format('YYYY-MM-DD') : null
+        employment_type: values.employment_type,
+        date_of_birth: values.date_of_birth ? values.date_of_birth.format('YYYY-MM-DD') : null,
+        gender: values.gender || null,
+        aadhaar_number: values.aadhaar_number || null,
+        status: values.status,
       };
-      
-      await updateStaff(id, data);
+
+      await updateStaff(id, payload);
       message.success('Staff member updated successfully');
       setIsEditMode(false);
       fetchStaff();
     } catch (error) {
-      message.error(error.response?.data?.detail || 'Failed to update staff member');
+      const detail = error.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        detail.forEach(e => message.error(`${e.loc?.slice(1).join('.')} — ${e.msg}`));
+      } else {
+        message.error(typeof detail === 'string' ? detail : 'Failed to update staff member');
+      }
     } finally {
       setSaving(false);
     }
@@ -97,12 +131,7 @@ export default function StaffDetails() {
   };
 
   const getStatusColor = (status) => {
-    const colors = {
-      ACTIVE: 'success',
-      INACTIVE: 'default',
-      ON_LEAVE: 'warning',
-      TERMINATED: 'error'
-    };
+    const colors = { ACTIVE: 'success', INACTIVE: 'default', ON_LEAVE: 'warning', TERMINATED: 'error' };
     return colors[status] || 'default';
   };
 
@@ -159,49 +188,45 @@ export default function StaffDetails() {
             <Descriptions.Item label="Staff ID">
               <Tag color="blue">{staff.id}</Tag>
             </Descriptions.Item>
-            
+
             <Descriptions.Item label="User ID">
               <Tag color="green">{staff.user_id}</Tag>
             </Descriptions.Item>
 
             <Descriptions.Item label="Full Name">{staff.full_name}</Descriptions.Item>
             <Descriptions.Item label="Email">{staff.email}</Descriptions.Item>
-            
+
             <Descriptions.Item label="Contact Number">{staff.contact_number || 'N/A'}</Descriptions.Item>
             <Descriptions.Item label="Emergency Contact">{staff.emergency_contact || 'N/A'}</Descriptions.Item>
-            
+
             <Descriptions.Item label="Date of Birth">
               {staff.date_of_birth ? new Date(staff.date_of_birth).toLocaleDateString() : 'N/A'}
             </Descriptions.Item>
             <Descriptions.Item label="Gender">{staff.gender || 'N/A'}</Descriptions.Item>
-            
+
             <Descriptions.Item label="Aadhaar Number">{staff.aadhaar_number || 'N/A'}</Descriptions.Item>
-            
+
             <Descriptions.Item label="Designation">{getDesignationName(staff.designation_id)}</Descriptions.Item>
             <Descriptions.Item label="Department">{getDepartmentName(staff.department_id)}</Descriptions.Item>
-            
+
             <Descriptions.Item label="Employment Type">
               <Tag color="blue">{staff.employment_type?.replace('_', ' ')}</Tag>
             </Descriptions.Item>
-            
+
             <Descriptions.Item label="Date of Joining">
               {staff.date_of_joining ? new Date(staff.date_of_joining).toLocaleDateString() : 'N/A'}
             </Descriptions.Item>
-            
+
             <Descriptions.Item label="Status">
               <Tag color={getStatusColor(staff.status)}>{staff.status}</Tag>
             </Descriptions.Item>
-            
+
             <Descriptions.Item label="Address" span={2}>
               {staff.address || 'N/A'}
             </Descriptions.Item>
           </Descriptions>
         ) : (
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={handleSave}
-          >
+          <Form form={form} layout="vertical" onFinish={handleSave}>
             <Form.Item name="full_name" label="Full Name" rules={[{ required: true }]}>
               <Input />
             </Form.Item>

@@ -21,7 +21,7 @@ export default function RequestMeeting() {
   const fetchChildren = async () => {
     try {
       const response = await getMyChildren();
-      setChildren(response.data || []);
+      setChildren(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Failed to load children');
     }
@@ -30,28 +30,29 @@ export default function RequestMeeting() {
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
+      // POST /parents/me/meetings — exact payload fields
       const data = {
         teacher_id: values.teacher_id,
         student_id: values.student_id || null,
         meeting_at: values.meeting_at.toISOString(),
         duration_minutes: values.duration_minutes,
         mode: values.mode,
-        agenda: values.agenda
+        agenda: values.agenda,
       };
-      
+
       await requestMeeting(data);
       message.success('Meeting request submitted successfully');
       form.resetFields();
       navigate('/parent/meetings');
     } catch (error) {
-      message.error(error.response?.data?.detail || 'Failed to request meeting');
+      const detail = error.response?.data?.detail;
+      message.error(typeof detail === 'string' ? detail : 'Failed to request meeting');
     } finally {
       setLoading(false);
     }
   };
 
   const disabledDate = (current) => {
-    // Disable past dates
     return current && current < new Date().setHours(0, 0, 0, 0);
   };
 
@@ -64,10 +65,7 @@ export default function RequestMeeting() {
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
-          initialValues={{
-            duration_minutes: 30,
-            mode: 'ONLINE'
-          }}
+          initialValues={{ duration_minutes: 30, mode: 'ONLINE' }}
         >
           <Row gutter={16}>
             <Col xs={24} md={12}>
@@ -76,13 +74,8 @@ export default function RequestMeeting() {
                 label="Select Teacher"
                 rules={[{ required: true, message: 'Please select a teacher' }]}
               >
-                <Select
-                  placeholder="Select teacher"
-                  size="large"
-                  showSearch
-                  optionFilterProp="children"
-                >
-                  {/* This would come from teacher service */}
+                <Select placeholder="Select teacher" size="large" showSearch optionFilterProp="children">
+                  {/* Teacher list from teacher service — hardcoded as parent service has no teacher list endpoint */}
                   <Option value="TCH001">Mr. Rajesh Kumar - Mathematics</Option>
                   <Option value="TCH002">Ms. Priya Sharma - English</Option>
                   <Option value="TCH003">Mr. Amit Patel - Science</Option>
@@ -92,10 +85,7 @@ export default function RequestMeeting() {
             </Col>
 
             <Col xs={24} md={12}>
-              <Form.Item
-                name="student_id"
-                label="Regarding Child (Optional)"
-              >
+              <Form.Item name="student_id" label="Regarding Child (Optional)">
                 <Select
                   placeholder="Select child (leave blank for general discussion)"
                   size="large"
@@ -172,20 +162,10 @@ export default function RequestMeeting() {
           </Form.Item>
 
           <Form.Item>
-            <Button 
-              type="primary" 
-              htmlType="submit" 
-              loading={loading}
-              size="large"
-              icon={<CalendarOutlined />}
-            >
+            <Button type="primary" htmlType="submit" loading={loading} size="large" icon={<CalendarOutlined />}>
               Submit Meeting Request
             </Button>
-            <Button 
-              style={{ marginLeft: 8 }} 
-              onClick={() => navigate('/parent/meetings')}
-              size="large"
-            >
+            <Button style={{ marginLeft: 8 }} onClick={() => navigate('/parent/meetings')} size="large">
               Cancel
             </Button>
           </Form.Item>

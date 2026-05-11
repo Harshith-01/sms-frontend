@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Card, Table, Button, Input, Select, Tag, Space, Popconfirm, message } from 'antd';
-import { 
-  PlusOutlined, 
-  SearchOutlined, 
+import {
+  PlusOutlined,
+  SearchOutlined,
   UploadOutlined,
   EditOutlined,
   EyeOutlined,
   DeleteOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { getStaff, deactivateStaff, getDesignations, getDepartments } from '../../../../services/staffService';
+import { getStaff, deactivateStaff, getDesignations, toArray } from '../../../../services/staffService';
+import { getDepartments } from '../../../../services/academicService';
 import './Staff.css';
 
 const { Option } = Select;
@@ -33,20 +34,21 @@ export default function StaffList() {
   }, []);
 
   useEffect(() => {
-    fetchStaff();
+    fetchStaffList();
   }, [filters]);
 
-  const fetchStaff = async () => {
+  const fetchStaffList = async () => {
     try {
       setLoading(true);
       const response = await getStaff({
         ...filters,
         full_name: searchText || null,
-        limit: 50
+        limit: 50,
       });
-      setStaff(response.data || []);
+      setStaff(toArray(response));
     } catch (error) {
       message.error('Failed to load staff');
+      setStaff([]);
     } finally {
       setLoading(false);
     }
@@ -55,7 +57,8 @@ export default function StaffList() {
   const fetchDesignations = async () => {
     try {
       const response = await getDesignations();
-      setDesignations(response.data || []);
+      const d = response.data;
+      setDesignations(Array.isArray(d) ? d : d?.items || d?.results || []);
     } catch (error) {
       console.error('Failed to load designations');
     }
@@ -64,43 +67,34 @@ export default function StaffList() {
   const fetchDepartments = async () => {
     try {
       const response = await getDepartments();
-      setDepartments(response.data || []);
+      const d = response.data;
+      setDepartments(Array.isArray(d) ? d : d?.items || d?.results || []);
     } catch (error) {
       console.error('Failed to load departments');
     }
   };
 
-  const handleDeactivate = async (staffId) => {
+  const handleDeactivate = async (staff_id) => {
     try {
-      await deactivateStaff(staffId);
+      await deactivateStaff(staff_id);
       message.success('Staff member deactivated successfully');
-      fetchStaff();
+      fetchStaffList();
     } catch (error) {
       message.error('Failed to deactivate staff member');
     }
   };
 
   const handleSearch = () => {
-    fetchStaff();
+    fetchStaffList();
   };
 
   const getStatusColor = (status) => {
-    const colors = {
-      ACTIVE: 'success',
-      INACTIVE: 'default',
-      ON_LEAVE: 'warning',
-      TERMINATED: 'error'
-    };
+    const colors = { ACTIVE: 'success', INACTIVE: 'default', ON_LEAVE: 'warning', TERMINATED: 'error' };
     return colors[status] || 'default';
   };
 
   const getEmploymentTypeColor = (type) => {
-    const colors = {
-      FULL_TIME: 'blue',
-      PART_TIME: 'cyan',
-      CONTRACT: 'purple',
-      DAILY_WAGE: 'orange'
-    };
+    const colors = { FULL_TIME: 'blue', PART_TIME: 'cyan', CONTRACT: 'purple', DAILY_WAGE: 'orange' };
     return colors[type] || 'default';
   };
 
@@ -150,7 +144,7 @@ export default function StaffList() {
       key: 'employment_type',
       render: (type) => (
         <Tag color={getEmploymentTypeColor(type)}>
-          {type.replace('_', ' ')}
+          {type?.replace('_', ' ')}
         </Tag>
       )
     },
@@ -189,11 +183,7 @@ export default function StaffList() {
               okText="Yes"
               cancelText="No"
             >
-              <Button
-                size="small"
-                danger
-                icon={<DeleteOutlined />}
-              >
+              <Button size="small" danger icon={<DeleteOutlined />}>
                 Deactivate
               </Button>
             </Popconfirm>

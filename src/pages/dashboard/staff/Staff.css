@@ -1,49 +1,211 @@
-/* Staff Dashboard Pages */
+/* =============================================
+   STAFF — DASHBOARD CSS (staff-facing pages)
+   ============================================= */
+
+/* Containers */
 .staff-dashboard-container,
 .staff-my-profile-container,
 .school-timetable-container {
   padding: 24px;
 }
 
+/* ---- Page headings — BLACK as requested ---- */
 .staff-dashboard-container h2,
 .staff-my-profile-container h2,
 .school-timetable-container h2 {
-  color: #1890ff;
-  font-weight: 600;
-  margin-bottom: 24px;
+  color: #1f2937;       /* black */
+  font-weight: 700;
+  font-size: 24px;
+  margin: 0 0 24px 0;
+  letter-spacing: -0.3px;
 }
+
+/* ---- Cards ---- */
+.staff-dashboard-container .ant-card,
+.staff-my-profile-container .ant-card,
+.school-timetable-container .ant-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+}
+
+/* =============================================
+   WELCOME CARD
+   ============================================= */
 
 .staff-dashboard-container .welcome-card {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
+  border-radius: 8px;
 }
 
 .staff-dashboard-container .welcome-card h3 {
   color: white;
   margin-bottom: 8px;
+  font-size: 20px;
+  font-weight: 600;
 }
 
 .staff-dashboard-container .welcome-card p {
   color: rgba(255, 255, 255, 0.9);
   margin: 0;
+  font-size: 14px;
 }
 
-.staff-dashboard-container .ant-card,
-.staff-my-profile-container .ant-card,
-.school-timetable-container .ant-card {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+/* Welcome card button — ensure it's visible on gradient bg */
+.staff-dashboard-container .welcome-card .ant-btn-primary {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: white;
+  border-radius: 8px;
+  height: 40px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
+
+.staff-dashboard-container .welcome-card .ant-btn-primary:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+/* =============================================
+   BUTTONS — uniform sizes
+   ============================================= */
+
+/* Large buttons */
+.staff-dashboard-container .ant-btn-lg,
+.staff-my-profile-container .ant-btn-lg,
+.school-timetable-container .ant-btn-lg {
+  height: 40px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 0 16px !important;
+}
+
+/* Block buttons in Quick Actions */
+.staff-dashboard-container .ant-btn[class*="ant-btn"]:not(.ant-btn-link) {
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+/* Timetable page — filter buttons aligned to input bottom */
+.school-timetable-container .ant-btn {
+  height: 36px;
+  border-radius: 8px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.school-timetable-container .ant-btn-primary {
+  height: 36px;
+}
+
+/* =============================================
+   TIMETABLE FILTER ROW
+   ============================================= */
+
+.school-timetable-container .ant-select .ant-select-selector {
+  height: 36px !important;
+  border-radius: 8px !important;
+  padding: 2px 12px !important;
+}
+
+.school-timetable-container .ant-select .ant-select-selection-item {
+  line-height: 30px !important;
+  font-size: 14px;
+}
+
+/* =============================================
+   STATISTIC CARDS
+   ============================================= */
+
+.staff-dashboard-container .ant-statistic-title {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.staff-dashboard-container .ant-card:not(.welcome-card) {
+  transition: transform 0.2s;
+}
+
+.staff-dashboard-container .ant-card:not(.welcome-card):hover {
+  transform: translateY(-2px);
+}
+
+/* =============================================
+   PROFILE DESCRIPTIONS
+   ============================================= */
+
+.staff-my-profile-container .ant-descriptions-item-label,
+.staff-dashboard-container .ant-descriptions-item-label {
+  font-weight: 600;
+  color: #6b7280;
+  background: #fafafa;
+  width: 200px;
+}
+
+.staff-my-profile-container .ant-descriptions-item-content,
+.staff-dashboard-container .ant-descriptions-item-content {
+  color: #111827;
+}
+
+/* =============================================
+   TABLE
+   ============================================= */
 
 .school-timetable-container .ant-table-thead > tr > th {
   background-color: #fafafa;
   font-weight: 600;
+  font-size: 13px;
 }
+
+/* =============================================
+   RESPONSIVE
+   ============================================= */
 
 @media (max-width: 768px) {
   .staff-dashboard-container,
   .staff-my-profile-container,
   .school-timetable-container {
     padding: 16px;
+  }
+
+  .staff-dashboard-container h2,
+  .staff-my-profile-container h2,
+  .school-timetable-container h2 {
+    font-size: 20px;
+  }
+
+  .staff-dashboard-container .welcome-card .ant-row {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .school-timetable-container > .ant-card > .ant-card-body > div {
+    flex-direction: column;
+  }
+
+  .school-timetable-container .ant-select {
+    width: 100% !important;
+  }
+
+  .school-timetable-container > .ant-card > .ant-card-body > div > div:last-child {
+    margin-top: 0 !important;
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+
+  .school-timetable-container .ant-btn {
+    flex: 1;
   }
 }

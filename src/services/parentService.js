@@ -1,168 +1,95 @@
 import { createAPI } from "./api";
 
-// ✅ Connect to Parent Microservice
 const api = createAPI(import.meta.env.VITE_PARENT_SERVICE);
 
-// ==================== ADMIN ENDPOINTS ====================
-
-// Get all parents
-export const getParents = async (filters = {}) => {
-  const params = new URLSearchParams();
-
-  if (filters.is_active !== undefined)
-    params.append("is_active", filters.is_active);
-  if (filters.limit) params.append("limit", filters.limit);
-  if (filters.offset) params.append("offset", filters.offset);
-
-  return api.get(`/parents?${params.toString()}`);
+// Safe array extractor for any API response shape
+export const toArray = (res) => {
+  const d = res?.data;
+  if (Array.isArray(d)) return d;
+  if (Array.isArray(d?.items)) return d.items;
+  if (Array.isArray(d?.results)) return d.results;
+  if (Array.isArray(d?.data)) return d.data;
+  return [];
 };
 
-// Get parent by ID
-export const getParentById = async (parentId) => {
-  return api.get(`/parents/${parentId}`);
-};
+// ==================== ADMIN APIs ====================
 
-// Create parent
-export const createParent = async (data) => {
-  return api.post("/parents", data);
-};
+// GET /parents
+export const getParents = (params = {}) =>
+  api.get("/parents", { params });
 
-// Update parent
-export const updateParent = async (parentId, data) => {
-  return api.put(`/parents/${parentId}`, data);
-};
+// GET /parents/{parent_id}
+export const getParentById = (parent_id) =>
+  api.get(`/parents/${parent_id}`);
 
-// Delete / deactivate parent
-export const deactivateParent = async (parentId) => {
-  return api.delete(`/parents/${parentId}`);
-};
+// POST /parents
+export const createParent = (data) =>
+  api.post("/parents", data);
 
-// Link student
-export const linkStudentToParent = async (parentId, data) => {
-  return api.post(`/parents/${parentId}/link-student`, data);
-};
+// PUT /parents/{parent_id}
+export const updateParent = (parent_id, data) =>
+  api.put(`/parents/${parent_id}`, data);
 
-// Unlink student
-export const unlinkStudentFromParent = async (parentId, studentId) => {
-  return api.delete(
-    `/parents/${parentId}/unlink-student/${studentId}`
-  );
-};
+// DELETE /parents/{parent_id}
+export const deactivateParent = (parent_id) =>
+  api.delete(`/parents/${parent_id}`);
 
-// Get children of parent
-export const getParentChildren = async (parentId) => {
-  return api.get(`/parents/${parentId}/children`);
-};
+// GET /parents/{parent_id}/children  (admin view)
+export const getParentChildren = (parent_id) =>
+  api.get(`/parents/${parent_id}/children`);
 
-// ==================== PARENT SELF ====================
+// POST /parents/{parent_id}/link-student
+export const linkStudentToParent = (parent_id, data) =>
+  api.post(`/parents/${parent_id}/link-student`, data);
 
-// My profile
-export const getMyProfile = async () => {
-  return api.get("/parents/me");
-};
+// DELETE /parents/{parent_id}/unlink-student/{student_id}
+export const unlinkStudentFromParent = (parent_id, student_id) =>
+  api.delete(`/parents/${parent_id}/unlink-student/${student_id}`);
 
-// My children
-export const getMyChildren = async () => {
-  return api.get("/parents/me/children");
-};
+// ==================== PARENT SELF APIs ====================
 
-// Child attendance
-export const getChildAttendance = async (studentId, params = {}) => {
-  return api.get(
-    `/parents/me/children/${studentId}/attendance`,
-    {
-      params: {
-        class_section_id: params.class_section_id,
-        academic_term_id: params.academic_term_id,
-      },
-    }
-  );
-};
+// GET /parents/me
+export const getMyProfile = () =>
+  api.get("/parents/me");
 
-// Child report cards
-export const getChildReportCards = async (studentId) => {
-  return api.get(
-    `/parents/me/children/${studentId}/report-cards`
-  );
-};
+// GET /parents/me/children
+export const getMyChildren = () =>
+  api.get("/parents/me/children");
 
-// Child exam schedule
-export const getChildExamSchedule = async (
-  studentId,
-  params = {}
-) => {
-  return api.get(
-    `/parents/me/children/${studentId}/exam-schedule`,
-    {
-      params: {
-        class_section_id: params.class_section_id,
-        academic_year_id: params.academic_year_id,
-        academic_term_id: params.academic_term_id,
-      },
-    }
-  );
-};
+// GET /parents/me/children/{student_id}/attendance
+export const getChildAttendance = (student_id, params = {}) =>
+  api.get(`/parents/me/children/${student_id}/attendance`, { params });
 
-// Child timetable
-export const getChildTimetable = async (studentId, params = {}) => {
-  return api.get(
-    `/parents/me/children/${studentId}/timetable`,
-    {
-      params: {
-        class_section_id: params.class_section_id,
-        academic_term_id: params.academic_term_id,
-      },
-    }
-  );
-};
+// GET /parents/me/children/{student_id}/report-cards
+export const getChildReportCards = (student_id) =>
+  api.get(`/parents/me/children/${student_id}/report-cards`);
+
+// GET /parents/me/children/{student_id}/exam-schedule
+export const getChildExamSchedule = (student_id, params = {}) =>
+  api.get(`/parents/me/children/${student_id}/exam-schedule`, { params });
+
+// GET /parents/me/children/{student_id}/timetable
+export const getChildTimetable = (student_id, params = {}) =>
+  api.get(`/parents/me/children/${student_id}/timetable`, { params });
 
 // ==================== MEETINGS ====================
 
-// Request meeting
-export const requestMeeting = async (data) => {
-  return api.post("/parents/me/meetings", data);
-};
+// POST /parents/me/meetings
+export const requestMeeting = (data) =>
+  api.post("/parents/me/meetings", data);
 
-// My meetings
-export const getMyMeetings = async (status = null) => {
-  return api.get("/parents/me/meetings", {
-    params: status ? { status } : {},
-  });
-};
+// GET /parents/me/meetings
+export const getMyMeetings = (params = {}) =>
+  api.get("/parents/me/meetings", { params });
 
-// All meetings (admin/teacher)
-export const listAllMeetings = async (filters = {}) => {
-  return api.get("/parents/meetings", {
-    params: filters,
-  });
-};
-
-// Update meeting
-export const updateMeetingStatus = async (meetingId, data) => {
-  return api.patch(`/parents/meetings/${meetingId}`, data);
-};
-
-// ==================== EXPORT ====================
+// PATCH /parents/meetings/{meeting_id}
+export const updateMeeting = (meeting_id, data) =>
+  api.patch(`/parents/meetings/${meeting_id}`, data);
 
 export default {
-  getParents,
-  getParentById,
-  createParent,
-  updateParent,
-  deactivateParent,
-  linkStudentToParent,
-  unlinkStudentFromParent,
-  getParentChildren,
-
-  getMyProfile,
-  getMyChildren,
-  getChildAttendance,
-  getChildReportCards,
-  getChildExamSchedule,
-  getChildTimetable,
-
-  requestMeeting,
-  getMyMeetings,
-  listAllMeetings,
-  updateMeetingStatus,
+  getParents, getParentById, createParent, updateParent, deactivateParent,
+  getParentChildren, linkStudentToParent, unlinkStudentFromParent,
+  getMyProfile, getMyChildren,
+  getChildAttendance, getChildReportCards, getChildExamSchedule, getChildTimetable,
+  requestMeeting, getMyMeetings, updateMeeting,
 };

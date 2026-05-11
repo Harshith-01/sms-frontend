@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Card, Form, Input, Select, DatePicker, Button, Row, Col, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { createStaff, getDesignations, getDepartments } from '../../../../services/staffService';
+import { createStaff, getDesignations } from '../../../../services/staffService';
+import { getDepartments } from '../../../../services/academicService';
 import './Staff.css';
 
 export default function AddStaff() {
@@ -19,7 +20,8 @@ export default function AddStaff() {
   const fetchDesignations = async () => {
     try {
       const response = await getDesignations();
-      setDesignations(response.data || []);
+      const d = response.data;
+      setDesignations(Array.isArray(d) ? d : d?.items || d?.results || []);
     } catch (error) {
       console.error('Failed to load designations');
     }
@@ -28,7 +30,8 @@ export default function AddStaff() {
   const fetchDepartments = async () => {
     try {
       const response = await getDepartments();
-      setDepartments(response.data || []);
+      const d = response.data;
+      setDepartments(Array.isArray(d) ? d : d?.items || d?.results || []);
     } catch (error) {
       console.error('Failed to load departments');
     }
@@ -37,17 +40,32 @@ export default function AddStaff() {
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
-      const data = {
-        ...values,
+      // Explicit payload — DTO has extra="forbid", only allowed fields
+      const payload = {
+        full_name: values.full_name,
+        email: values.email,
+        contact_number: values.contact_number || null,
+        emergency_contact: values.emergency_contact || null,
+        designation_id: values.designation_id ? Number(values.designation_id) : null,
+        department_id: values.department_id ? Number(values.department_id) : null,
+        address: values.address || null,
         date_of_joining: values.date_of_joining ? values.date_of_joining.format('YYYY-MM-DD') : null,
-        date_of_birth: values.date_of_birth ? values.date_of_birth.format('YYYY-MM-DD') : null
+        employment_type: values.employment_type,
+        date_of_birth: values.date_of_birth ? values.date_of_birth.format('YYYY-MM-DD') : null,
+        gender: values.gender || null,
+        aadhaar_number: values.aadhaar_number || null,
       };
-      
-      await createStaff(data);
+
+      await createStaff(payload);
       message.success('Staff member created successfully');
       navigate('/admin/staff');
     } catch (error) {
-      message.error(error.response?.data?.detail || 'Failed to create staff member');
+      const detail = error.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        detail.forEach(e => message.error(`${e.loc?.slice(1).join('.')} — ${e.msg}`));
+      } else {
+        message.error(typeof detail === 'string' ? detail : 'Failed to create staff member');
+      }
     } finally {
       setLoading(false);
     }

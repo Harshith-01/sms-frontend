@@ -13,29 +13,31 @@ export default function ChildExamSchedule() {
   const [exams, setExams] = useState([]);
   const [children, setChildren] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedChild, setSelectedChild] = useState(studentId);
-
-  // These would come from dropdowns in real app
-  const [classSectionId, setClassSectionId] = useState(1);
-  const [academicYearId, setAcademicYearId] = useState(1);
-  const [academicTermId, setAcademicTermId] = useState(1);
+  const [selectedChild, setSelectedChild] = useState(studentId || null);
+  const [classSectionId] = useState(1);
+  const [academicYearId] = useState(1);
+  const [academicTermId] = useState(1);
 
   useEffect(() => {
     fetchChildren();
   }, []);
 
   useEffect(() => {
-    if (selectedChild) {
-      fetchExamSchedule();
+    if (selectedChild && children.length > 0) {
+      const childData = children.find(c => c.student_id === selectedChild);
+      // Check can_view_academics permission before calling API
+      if (childData?.can_view_academics) {
+        fetchExamSchedule();
+      }
     }
-  }, [selectedChild]);
+  }, [selectedChild, children]);
 
   const fetchChildren = async () => {
     try {
       const response = await getMyChildren();
-      const kids = response.data || [];
+      const kids = Array.isArray(response.data) ? response.data : [];
       setChildren(kids);
-      
+
       if (!studentId && kids.length > 0) {
         const childWithAccess = kids.find(c => c.can_view_academics);
         if (childWithAccess) {
@@ -53,9 +55,9 @@ export default function ChildExamSchedule() {
       const response = await getChildExamSchedule(selectedChild, {
         class_section_id: classSectionId,
         academic_year_id: academicYearId,
-        academic_term_id: academicTermId
+        academic_term_id: academicTermId,
       });
-      setExams(response.data || []);
+      setExams(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       message.error('Failed to load exam schedule');
     } finally {
@@ -66,44 +68,24 @@ export default function ChildExamSchedule() {
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const day = date.getDate().toString().padStart(2, '0');
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const month = monthNames[date.getMonth()];
-    const year = date.getFullYear();
-    return `${day} ${month} ${year}`;
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${day} ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
   };
 
   const isToday = (dateString) => {
     const date = new Date(dateString);
-    const today = new Date();
-    return date.toDateString() === today.toDateString();
+    return date.toDateString() === new Date().toDateString();
   };
 
-  const isFuture = (dateString) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    return date > today;
-  };
+  const isFuture = (dateString) => new Date(dateString) > new Date();
 
   const selectedChildData = children.find(c => c.student_id === selectedChild);
   const canViewAcademics = selectedChildData?.can_view_academics;
 
   const columns = [
-    {
-      title: 'Exam Name',
-      dataIndex: 'exam_name',
-      key: 'exam_name',
-    },
-    {
-      title: 'Subject',
-      dataIndex: 'subject_name',
-      key: 'subject_name',
-    },
-    {
-      title: 'Date',
-      dataIndex: 'exam_date',
-      key: 'exam_date',
-      render: (date) => formatDate(date),
-    },
+    { title: 'Exam Name', dataIndex: 'exam_name', key: 'exam_name' },
+    { title: 'Subject', dataIndex: 'subject_name', key: 'subject_name' },
+    { title: 'Date', dataIndex: 'exam_date', key: 'exam_date', render: (date) => formatDate(date) },
     {
       title: 'Time',
       dataIndex: 'start_time',
@@ -116,33 +98,23 @@ export default function ChildExamSchedule() {
       key: 'duration_minutes',
       render: (mins) => `${mins} min`,
     },
-    {
-      title: 'Total Marks',
-      dataIndex: 'total_marks',
-      key: 'total_marks',
-    },
+    { title: 'Total Marks', dataIndex: 'total_marks', key: 'total_marks' },
     {
       title: 'Status',
       dataIndex: 'exam_date',
       key: 'status',
       render: (date) => {
-        if (isFuture(date)) {
-          return <Tag color="blue">Upcoming</Tag>;
-        } else if (isToday(date)) {
-          return <Tag color="orange">Today</Tag>;
-        } else {
-          return <Tag color="default">Completed</Tag>;
-        }
+        if (isFuture(date)) return <Tag color="blue">Upcoming</Tag>;
+        if (isToday(date)) return <Tag color="orange">Today</Tag>;
+        return <Tag color="default">Completed</Tag>;
       },
     },
   ];
 
-  if (!canViewAcademics) {
+  if (children.length > 0 && selectedChild && canViewAcademics === false) {
     return (
       <Card>
-        <Empty
-          description="You don't have permission to view exam schedule for this child"
-        >
+        <Empty description="You don't have permission to view exam schedule for this child">
           <Button onClick={() => navigate('/parent/children')}>
             Back to My Children
           </Button>
@@ -155,10 +127,7 @@ export default function ChildExamSchedule() {
     <div className="child-exam-schedule-container">
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2>Exam Schedule</h2>
-        <Button 
-          icon={<ArrowLeftOutlined />} 
-          onClick={() => navigate('/parent/children')}
-        >
+        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/parent/children')}>
           Back
         </Button>
       </div>
@@ -183,13 +152,7 @@ export default function ChildExamSchedule() {
         </div>
       </Card>
 
-      <Card 
-        title={
-          <span>
-            <CalendarOutlined /> Upcoming Exams
-          </span>
-        }
-      >
+      <Card title={<span><CalendarOutlined /> Upcoming Exams</span>}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: '40px 0' }}>
             <Spin size="large" />
@@ -200,7 +163,7 @@ export default function ChildExamSchedule() {
           <Table
             columns={columns}
             dataSource={exams}
-            rowKey="id"
+            rowKey={(r, i) => r.id ?? i}
             pagination={{ pageSize: 10 }}
           />
         )}

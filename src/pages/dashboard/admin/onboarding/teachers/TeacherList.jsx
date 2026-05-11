@@ -1,67 +1,74 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Table,
-  Input,
-  Button,
-  Space,
-  Popconfirm,
-  message,
-  Avatar,
-  Tag,
-  Row,
-  Col,
-  Card,
-  Select,
-  Modal,
-  Upload,
+  Table, Input, Button, Space, Popconfirm, message, Avatar,
+  Tag, Row, Col, Card, Select, Modal, Upload,
 } from 'antd';
 import {
-  SearchOutlined,
-  DeleteOutlined,
-  PlusOutlined,
-  ReloadOutlined,
-  EyeOutlined,
-  EditOutlined,
-  CloudUploadOutlined,
-  DownloadOutlined,
+  SearchOutlined, DeleteOutlined, PlusOutlined, ReloadOutlined,
+  EyeOutlined, EditOutlined, CloudUploadOutlined, DownloadOutlined,
 } from '@ant-design/icons';
 import { getTeachers, deleteTeacher, bulkUploadTeachers } from '../../../../../services/teacherService';
+import { getDepartments } from '../../../../../services/academicService';
 import './teacher.css';
 
 const { Option } = Select;
 
+const toArray = (res) => {
+  const d = res?.data;
+  if (Array.isArray(d)) return d;
+  if (Array.isArray(d?.items)) return d.items;
+  if (Array.isArray(d?.results)) return d.results;
+  if (Array.isArray(d?.data)) return d.data;
+  return [];
+};
+
 export default function TeacherList() {
   const navigate = useNavigate();
   const [teachers, setTeachers] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [bulkModal, setBulkModal] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [filters, setFilters] = useState({
-    name: '',
-    department: '',
+    full_name: '',
+    department_id: '',
     designation: '',
   });
 
   useEffect(() => {
     fetchTeachers();
+    fetchDepartments();
   }, []);
 
   const fetchTeachers = async () => {
     setLoading(true);
     try {
-      const response = await getTeachers(filters);
-      setTeachers(response.data);
+      const cleanFilters = Object.fromEntries(
+        Object.entries(filters).filter(([_, value]) => value !== '' && value !== null)
+      );
+      const response = await getTeachers(cleanFilters);
+      setTeachers(toArray(response));
     } catch (error) {
       message.error('Failed to fetch teachers');
+      setTeachers([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id) => {
+  const fetchDepartments = async () => {
     try {
-      await deleteTeacher(id);
+      const response = await getDepartments();
+      setDepartments(toArray(response));
+    } catch (error) {
+      console.error('Failed to fetch departments', error);
+    }
+  };
+
+  const handleDelete = async (teacher_id) => {
+    try {
+      await deleteTeacher(teacher_id);
       message.success('Teacher deleted successfully');
       fetchTeachers();
     } catch (error) {
@@ -84,8 +91,8 @@ export default function TeacherList() {
   };
 
   const downloadTemplate = () => {
-    const csvContent = 'full_name,email,phone_number,designation,department,employment_type,date_of_joining,address,is_active\n' +
-                       'John Doe,john@example.com,1234567890,Teacher,Mathematics,Permanent,2024-01-01,123 Main St,true';
+    const csvContent = 'full_name,email_id,contact_number,designation,department_id,employment_type,date_of_joining,communication_address\n' +
+                       'John Doe,john@example.com,1234567890,Teacher,1,Permanent,2024-01-01,123 Main St';
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -97,11 +104,14 @@ export default function TeacherList() {
     document.body.removeChild(link);
   };
 
+  // Resolve department_id → name from academic service departments
+  const getDeptName = (dept_id) => departments.find(d => d.id === dept_id)?.name || dept_id || 'N/A';
+
   const columns = [
     {
       title: 'Teacher ID',
-      dataIndex: 'id',
-      key: 'id',
+      dataIndex: 'teacher_id',
+      key: 'teacher_id',
       width: 120,
       render: (text) => <span className="teacher-id">#{text}</span>,
     },
@@ -126,16 +136,16 @@ export default function TeacherList() {
     },
     {
       title: 'Email',
-      dataIndex: 'email',
-      key: 'email',
+      dataIndex: 'email_id',
+      key: 'email_id',
       width: 220,
     },
     {
       title: 'Department',
-      dataIndex: 'department',
-      key: 'department',
+      dataIndex: 'department_id',
+      key: 'department_id',
       width: 150,
-      render: (text) => <Tag color="purple">{text || 'N/A'}</Tag>,
+      render: (dept_id) => <Tag color="purple">{getDeptName(dept_id)}</Tag>,
     },
     {
       title: 'Designation',
@@ -146,11 +156,11 @@ export default function TeacherList() {
     },
     {
       title: 'Status',
-      dataIndex: 'is_active',
-      key: 'is_active',
+      dataIndex: 'status',
+      key: 'status',
       width: 100,
       render: (text) => (
-        <Tag color={text ? 'green' : 'red'}>{text ? 'Active' : 'Inactive'}</Tag>
+        <Tag color={text === 'ACTIVE' ? 'green' : 'red'}>{text === 'ACTIVE' ? 'Active' : 'Inactive'}</Tag>
       ),
     },
     {
@@ -163,27 +173,22 @@ export default function TeacherList() {
           <Button
             type="link"
             icon={<EyeOutlined />}
-            onClick={() => navigate(`/admin/onboarding/teachers/${record.id}`)}
+            onClick={() => navigate(`/admin/onboarding/teachers/${record.teacher_id}`)}
             className="action-btn view-btn"
           />
           <Button
             type="link"
             icon={<EditOutlined />}
-            onClick={() => navigate(`/admin/onboarding/teachers/${record.id}/edit`)}
+            onClick={() => navigate(`/admin/onboarding/teachers/${record.teacher_id}/edit`)}
             className="action-btn edit-btn"
           />
           <Popconfirm
             title="Delete this teacher?"
-            onConfirm={() => handleDelete(record.id)}
+            onConfirm={() => handleDelete(record.teacher_id)}
             okText="Yes"
             cancelText="No"
           >
-            <Button
-              type="link"
-              icon={<DeleteOutlined />}
-              className="action-btn delete-btn"
-              danger
-            />
+            <Button type="link" icon={<DeleteOutlined />} className="action-btn delete-btn" danger />
           </Popconfirm>
         </Space>
       ),
@@ -198,11 +203,7 @@ export default function TeacherList() {
           <p className="page-subtitle">Manage all teachers</p>
         </div>
         <Space>
-          <Button
-            icon={<CloudUploadOutlined />}
-            size="large"
-            onClick={() => setBulkModal(true)}
-          >
+          <Button icon={<CloudUploadOutlined />} size="large" onClick={() => setBulkModal(true)}>
             Bulk Upload
           </Button>
           <Button
@@ -217,33 +218,32 @@ export default function TeacherList() {
       </div>
 
       <Card className="filter-card">
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={5}>
+        <Row gutter={[16, 16]} align="middle">
+          <Col xs={24} sm={12} md={6}>
             <Input
               placeholder="Search by name"
-              value={filters.name}
-              onChange={(e) => setFilters({ ...filters, name: e.target.value })}
+              value={filters.full_name}
+              onChange={(e) => setFilters({ ...filters, full_name: e.target.value })}
               size="large"
               allowClear
             />
           </Col>
-          <Col xs={24} sm={12} md={5}>
+          <Col xs={24} sm={12} md={6}>
+            {/* Department options loaded from academic service */}
             <Select
               placeholder="Department"
-              value={filters.department || undefined}
-              onChange={(value) => setFilters({ ...filters, department: value })}
+              value={filters.department_id || undefined}
+              onChange={(value) => setFilters({ ...filters, department_id: value })}
               size="large"
               allowClear
               style={{ width: '100%' }}
             >
-              <Option value="Mathematics">Mathematics</Option>
-              <Option value="English">English</Option>
-              <Option value="Science">Science</Option>
-              <Option value="Physics">Physics</Option>
-              <Option value="Chemistry">Chemistry</Option>
+              {departments.map(d => (
+                <Option key={d.id} value={d.id}>{d.name}</Option>
+              ))}
             </Select>
           </Col>
-          <Col xs={24} sm={12} md={5}>
+          <Col xs={24} sm={12} md={6}>
             <Select
               placeholder="Designation"
               value={filters.designation || undefined}
@@ -258,23 +258,25 @@ export default function TeacherList() {
               <Option value="Principal">Principal</Option>
             </Select>
           </Col>
-          <Col xs={24} sm={12} md={4}>
-            <Space>
+          <Col xs={24} sm={12} md={6}>
+            <Space style={{ width: '100%' }}>
               <Button
                 type="primary"
                 icon={<SearchOutlined />}
                 onClick={fetchTeachers}
                 size="large"
+                style={{ flex: 1 }}
               >
                 Search
               </Button>
               <Button
                 icon={<ReloadOutlined />}
                 onClick={() => {
-                  setFilters({ name: '', department: '', designation: '' });
+                  setFilters({ full_name: '', department_id: '', designation: '' });
                   setTimeout(fetchTeachers, 100);
                 }}
                 size="large"
+                style={{ flex: 1 }}
               >
                 Reset
               </Button>
@@ -287,7 +289,7 @@ export default function TeacherList() {
         <Table
           columns={columns}
           dataSource={teachers}
-          rowKey="id"
+          rowKey="teacher_id"
           loading={loading}
           scroll={{ x: 1400 }}
           pagination={{
@@ -313,9 +315,7 @@ export default function TeacherList() {
             customRequest={handleBulkUpload}
             showUploadList={false}
           >
-            <p className="ant-upload-drag-icon">
-              <CloudUploadOutlined />
-            </p>
+            <p className="ant-upload-drag-icon"><CloudUploadOutlined /></p>
             <p className="ant-upload-text">Click or drag file to upload</p>
             <p className="ant-upload-hint">Supports: .xlsx, .xls, .csv</p>
           </Upload.Dragger>

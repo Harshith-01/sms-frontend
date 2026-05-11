@@ -1,21 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, Descriptions, Button, Row, Col, Tabs, message, Form, Input, Table, Space, Popconfirm, Tag, Modal } from 'antd';
-import { 
-  ArrowLeftOutlined, 
-  EditOutlined, 
-  SaveOutlined, 
+import {
+  ArrowLeftOutlined,
+  EditOutlined,
+  SaveOutlined,
   CloseOutlined,
   LinkOutlined,
   DeleteOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined
 } from '@ant-design/icons';
-import { 
-  getParentById, 
-  updateParent, 
-  getParentChildren, 
-  unlinkStudentFromParent 
+import {
+  getParentById,
+  updateParent,
+  getParentChildren,
+  unlinkStudentFromParent
 } from '../../../../services/parentService';
 import LinkStudentModal from './LinkStudentModal';
 import './Parents.css';
@@ -23,19 +23,24 @@ import './Parents.css';
 const { TextArea } = Input;
 
 export default function ParentDetails() {
-  const { id } = useParams();
+  const { id } = useParams(); // id = parent_id from URL
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [form] = Form.useForm();
-  
+
   const [parent, setParent] = useState(null);
   const [children, setChildren] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editMode, setEditMode] = useState(searchParams.get('mode') === 'edit');
-  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || '1');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') === 'students' ? '2' : '1');
   const [linkModalVisible, setLinkModalVisible] = useState(searchParams.get('tab') === 'students');
 
   useEffect(() => {
+    if (!id) {
+      message.error('Invalid parent ID');
+      navigate('/admin/parents');
+      return;
+    }
     fetchParentDetails();
   }, [id]);
 
@@ -61,8 +66,10 @@ export default function ParentDetails() {
 
   const fetchChildren = async () => {
     try {
+      // Admin endpoint: GET /parents/{parent_id}/children
       const response = await getParentChildren(id);
-      setChildren(response.data || []);
+      const data = response.data;
+      setChildren(Array.isArray(data) ? data : data?.items || data?.results || []);
     } catch (error) {
       message.error('Failed to load linked students');
     }
@@ -71,20 +78,40 @@ export default function ParentDetails() {
   const handleUpdate = async (values) => {
     try {
       setLoading(true);
-      await updateParent(id, values);
+      // Explicit payload — only fields allowed by PUT /parents/{parent_id} DTO
+      const payload = {
+        email: values.email,
+        primary_contact: values.primary_contact,
+        father_name: values.father_name || null,
+        mother_name: values.mother_name || null,
+        guardian_name: values.guardian_name || null,
+        secondary_contact: values.secondary_contact || null,
+        guardian_contact: values.guardian_contact || null,
+        guardian_email: values.guardian_email || null,
+        address: values.address || null,
+        permanent_address: values.permanent_address || null,
+        occupation: values.occupation || null,
+        annual_income: values.annual_income || null,
+      };
+      await updateParent(id, payload);
       message.success('Parent updated successfully');
       setEditMode(false);
       fetchParentDetails();
     } catch (error) {
-      message.error(error.response?.data?.detail || 'Failed to update parent');
+      const detail = error.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        detail.forEach(e => message.error(`${e.loc?.slice(1).join('.')} — ${e.msg}`));
+      } else {
+        message.error(typeof detail === 'string' ? detail : 'Failed to update parent');
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUnlink = async (studentId) => {
+  const handleUnlink = async (student_id) => {
     try {
-      await unlinkStudentFromParent(id, studentId);
+      await unlinkStudentFromParent(id, student_id);
       message.success('Student unlinked successfully');
       fetchChildren();
     } catch (error) {
@@ -97,7 +124,7 @@ export default function ParentDetails() {
       title: 'Student ID',
       dataIndex: 'student_id',
       key: 'student_id',
-      render: (id) => <Tag color="blue">{id}</Tag>,
+      render: (sid) => <Tag color="blue">{sid}</Tag>,
     },
     {
       title: 'Student Name',
@@ -114,7 +141,9 @@ export default function ParentDetails() {
       title: 'Primary Contact',
       dataIndex: 'is_primary_contact',
       key: 'is_primary_contact',
-      render: (isPrimary) => isPrimary ? <CheckCircleOutlined style={{ color: '#52c41a' }} /> : <CloseCircleOutlined style={{ color: '#999' }} />,
+      render: (isPrimary) => isPrimary
+        ? <CheckCircleOutlined style={{ color: '#52c41a' }} />
+        : <CloseCircleOutlined style={{ color: '#999' }} />,
     },
     {
       title: 'Permissions',
@@ -201,11 +230,7 @@ export default function ParentDetails() {
               </Row>
               <Row gutter={16}>
                 <Col xs={24} md={8}>
-                  <Form.Item 
-                    name="primary_contact" 
-                    label="Primary Contact"
-                    rules={[{ required: true, message: 'Required' }]}
-                  >
+                  <Form.Item name="primary_contact" label="Primary Contact" rules={[{ required: true, message: 'Required' }]}>
                     <Input />
                   </Form.Item>
                 </Col>
@@ -222,11 +247,7 @@ export default function ParentDetails() {
               </Row>
               <Row gutter={16}>
                 <Col xs={24} md={12}>
-                  <Form.Item 
-                    name="email" 
-                    label="Email"
-                    rules={[{ required: true, message: 'Required' }, { type: 'email' }]}
-                  >
+                  <Form.Item name="email" label="Email" rules={[{ required: true, message: 'Required' }, { type: 'email' }]}>
                     <Input />
                   </Form.Item>
                 </Col>

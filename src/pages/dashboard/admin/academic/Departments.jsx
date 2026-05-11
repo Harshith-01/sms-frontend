@@ -4,6 +4,15 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutli
 import { getDepartments, createDepartment, updateDepartment, deleteDepartment } from '../../../../services/academicService';
 import './Academic.css';
 
+const toArray = (res) => {
+  const d = res?.data;
+  if (Array.isArray(d)) return d;
+  if (Array.isArray(d?.items)) return d.items;
+  if (Array.isArray(d?.results)) return d.results;
+  if (Array.isArray(d?.data)) return d.data;
+  return [];
+};
+
 const { TextArea } = Input;
 
 export default function Departments() {
@@ -22,7 +31,7 @@ export default function Departments() {
     setLoading(true);
     try {
       const response = await getDepartments();
-      setData(response.data);
+      setData(toArray(response));
     } catch (error) {
       message.error('Failed to fetch departments');
       console.error(error);
@@ -39,13 +48,17 @@ export default function Departments() {
 
   const handleEdit = (record) => {
     setEditingRecord(record);
-    form.setFieldsValue(record);
+    // Map backend status string to boolean for the Switch
+    form.setFieldsValue({
+      ...record,
+      is_active: record.status === 'ACTIVE',
+    });
     setModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (dept_id) => {
     try {
-      await deleteDepartment(id);
+      await deleteDepartment(dept_id);
       message.success('Department deleted successfully');
       fetchData();
     } catch (error) {
@@ -57,16 +70,32 @@ export default function Departments() {
   const handleSubmit = async (values) => {
     try {
       if (editingRecord) {
-        await updateDepartment(editingRecord.id, values);
+        // UPDATE: name, description, status all allowed
+        const payload = {
+          name: values.name,
+          description: values.description || null,
+          status: values.is_active ? 'ACTIVE' : 'INACTIVE',
+        };
+        await updateDepartment(editingRecord.id, payload);
         message.success('Department updated successfully');
       } else {
-        await createDepartment(values);
+        // CREATE: only name and description — NO status field
+        const payload = {
+          name: values.name,
+          description: values.description || null,
+        };
+        await createDepartment(payload);
         message.success('Department created successfully');
       }
       setModalOpen(false);
       fetchData();
     } catch (error) {
-      message.error(editingRecord ? 'Failed to update' : 'Failed to create');
+      const detail = error.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        detail.forEach(e => message.error(`${e.loc?.slice(1).join('.')} — ${e.msg}`));
+      } else {
+        message.error(editingRecord ? 'Failed to update' : 'Failed to create');
+      }
       console.error(error);
     }
   };
@@ -91,9 +120,9 @@ export default function Departments() {
     },
     {
       title: 'Status',
-      dataIndex: 'is_active',
-      key: 'is_active',
-      render: (text) => <Tag color={text ? 'green' : 'red'}>{text ? 'Active' : 'Inactive'}</Tag>,
+      dataIndex: 'status',
+      key: 'status',
+      render: (text) => <Tag color={text === 'ACTIVE' ? 'green' : 'red'}>{text === 'ACTIVE' ? 'Active' : 'Inactive'}</Tag>,
     },
     {
       title: 'Actions',

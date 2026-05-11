@@ -4,6 +4,15 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutli
 import { getClasses, createClass, updateClass, deleteClass, getDepartments, getAcademicYears } from '../../../../services/academicService';
 import './Academic.css';
 
+const toArray = (res) => {
+  const d = res?.data;
+  if (Array.isArray(d)) return d;
+  if (Array.isArray(d?.items)) return d.items;
+  if (Array.isArray(d?.results)) return d.results;
+  if (Array.isArray(d?.data)) return d.data;
+  return [];
+};
+
 const { Option } = Select;
 
 export default function Classes() {
@@ -26,7 +35,7 @@ export default function Classes() {
     setLoading(true);
     try {
       const response = await getClasses();
-      setData(response.data);
+      setData(toArray(response));
     } catch (error) {
       message.error('Failed to fetch classes');
     } finally {
@@ -37,7 +46,7 @@ export default function Classes() {
   const fetchDepartments = async () => {
     try {
       const response = await getDepartments();
-      setDepartments(response.data);
+      setDepartments(toArray(response));
     } catch (error) {
       console.error('Failed to fetch departments');
     }
@@ -46,11 +55,15 @@ export default function Classes() {
   const fetchAcademicYears = async () => {
     try {
       const response = await getAcademicYears();
-      setAcademicYears(response.data);
+      setAcademicYears(toArray(response));
     } catch (error) {
       console.error('Failed to fetch academic years');
     }
   };
+
+  // Local join helpers — ClassOut has no department_name / academic_year_label
+  const getDeptName = (dept_id) => departments.find(d => d.id === dept_id)?.name || '—';
+  const getYearLabel = (year_id) => academicYears.find(y => y.id === year_id)?.year_label || '—';
 
   const handleAdd = () => {
     setEditingRecord(null);
@@ -60,13 +73,17 @@ export default function Classes() {
 
   const handleEdit = (record) => {
     setEditingRecord(record);
-    form.setFieldsValue(record);
+    form.setFieldsValue({
+      class_number: record.class_number,
+      department_id: record.department_id,
+      academic_year_id: record.academic_year_id,
+    });
     setModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (class_id) => {
     try {
-      await deleteClass(id);
+      await deleteClass(class_id);
       message.success('Class deleted successfully');
       fetchData();
     } catch (error) {
@@ -76,17 +93,27 @@ export default function Classes() {
 
   const handleSubmit = async (values) => {
     try {
+      const payload = {
+        class_number: Number(values.class_number),
+        department_id: Number(values.department_id),
+        academic_year_id: Number(values.academic_year_id),
+      };
       if (editingRecord) {
-        await updateClass(editingRecord.id, values);
+        await updateClass(editingRecord.class_id, payload);
         message.success('Class updated successfully');
       } else {
-        await createClass(values);
+        await createClass(payload);
         message.success('Class created successfully');
       }
       setModalOpen(false);
       fetchData();
     } catch (error) {
-      message.error(editingRecord ? 'Failed to update' : 'Failed to create');
+      const detail = error.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        detail.forEach(e => message.error(`${e.loc?.slice(1).join('.')} — ${e.msg}`));
+      } else {
+        message.error(editingRecord ? 'Failed to update' : 'Failed to create');
+      }
     }
   };
 
@@ -95,16 +122,39 @@ export default function Classes() {
   );
 
   const columns = [
-    { title: 'Class Number', dataIndex: 'class_number', key: 'class_number', render: (text) => <strong>{text}</strong>, sorter: (a, b) => a.class_number - b.class_number },
-    { title: 'Department', dataIndex: 'department_name', key: 'department_name' },
-    { title: 'Academic Year', dataIndex: 'academic_year_label', key: 'academic_year_label' },
-    { title: 'Status', dataIndex: 'is_active', key: 'is_active', render: (text) => <Tag color={text ? 'green' : 'red'}>{text ? 'Active' : 'Inactive'}</Tag> },
+    {
+      title: 'Class Number',
+      dataIndex: 'class_number',
+      key: 'class_number',
+      render: (text) => <strong>{text}</strong>,
+      sorter: (a, b) => a.class_number - b.class_number,
+    },
+    {
+      title: 'Department',
+      dataIndex: 'department_id',
+      key: 'department_id',
+      // ClassOut has department_id only — resolve name locally
+      render: (dept_id) => getDeptName(dept_id),
+    },
+    {
+      title: 'Academic Year',
+      dataIndex: 'academic_year_id',
+      key: 'academic_year_id',
+      // ClassOut has academic_year_id only — resolve label locally
+      render: (year_id) => getYearLabel(year_id),
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (text) => <Tag color={text === 'ACTIVE' ? 'green' : 'red'}>{text === 'ACTIVE' ? 'Active' : 'Inactive'}</Tag>,
+    },
     {
       title: 'Actions', key: 'actions', fixed: 'right', width: 120,
       render: (_, record) => (
         <div style={{ display: 'flex', gap: 8 }}>
           <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)} className="action-btn edit-btn" />
-          <Popconfirm title="Delete this class?" onConfirm={() => handleDelete(record.id)}>
+          <Popconfirm title="Delete this class?" onConfirm={() => handleDelete(record.class_id)}>
             <Button type="link" icon={<DeleteOutlined />} danger className="action-btn delete-btn" />
           </Popconfirm>
         </div>
@@ -135,7 +185,7 @@ export default function Classes() {
         </Card>
 
         <Card className="table-card">
-          <Table columns={columns} dataSource={filteredData} rowKey="id" loading={loading} pagination={{ pageSize: 10, showTotal: (total) => `Total ${total} classes` }} />
+          <Table columns={columns} dataSource={filteredData} rowKey="class_id" loading={loading} pagination={{ pageSize: 10, showTotal: (total) => `Total ${total} classes` }} />
         </Card>
       </div>
 

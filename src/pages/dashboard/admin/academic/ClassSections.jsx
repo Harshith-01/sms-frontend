@@ -1,8 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Input, message, Card, Popconfirm, Select, Row, Col } from 'antd';
+import { Table, Button, Modal, Form, Input, message, Card, Popconfirm, Select, Tag, Row, Col } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons';
 import { getClassSections, createClassSection, updateClassSection, deleteClassSection, getClasses, getSections, getAcademicYears } from '../../../../services/academicService';
 import './Academic.css';
+
+const toArray = (res) => {
+  const d = res?.data;
+  if (Array.isArray(d)) return d;
+  if (Array.isArray(d?.items)) return d.items;
+  if (Array.isArray(d?.results)) return d.results;
+  if (Array.isArray(d?.data)) return d.data;
+  return [];
+};
 
 const { Option } = Select;
 
@@ -27,7 +36,7 @@ export default function ClassSections() {
     setLoading(true);
     try {
       const response = await getClassSections();
-      setData(response.data);
+      setData(toArray(response));
     } catch (error) {
       message.error('Failed to fetch class sections');
     } finally {
@@ -38,7 +47,7 @@ export default function ClassSections() {
   const fetchClasses = async () => {
     try {
       const response = await getClasses();
-      setClasses(response.data);
+      setClasses(toArray(response));
     } catch (error) {
       console.error('Failed to fetch classes');
     }
@@ -47,7 +56,7 @@ export default function ClassSections() {
   const fetchSections = async () => {
     try {
       const response = await getSections();
-      setSections(response.data);
+      setSections(toArray(response));
     } catch (error) {
       console.error('Failed to fetch sections');
     }
@@ -56,11 +65,19 @@ export default function ClassSections() {
   const fetchAcademicYears = async () => {
     try {
       const response = await getAcademicYears();
-      setAcademicYears(response.data);
+      setAcademicYears(toArray(response));
     } catch (error) {
       console.error('Failed to fetch academic years');
     }
   };
+
+  // ClassSectionOut has only IDs — resolve names locally
+  const getClassName = (class_id) => {
+    const cls = classes.find(c => c.class_id === class_id);
+    return cls ? `Class ${cls.class_number}` : '—';
+  };
+  const getSectionName = (section_id) => sections.find(s => s.section_id === section_id)?.section_name || '—';
+  const getYearLabel = (year_id) => academicYears.find(y => y.id === year_id)?.year_label || '—';
 
   const handleAdd = () => {
     setEditingRecord(null);
@@ -70,13 +87,19 @@ export default function ClassSections() {
 
   const handleEdit = (record) => {
     setEditingRecord(record);
-    form.setFieldsValue(record);
+    form.setFieldsValue({
+      class_id: record.class_id,
+      section_id: record.section_id,
+      academic_year_id: record.academic_year_id,
+      capacity: record.capacity,
+      room_number: record.room_number,
+    });
     setModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (cs_id) => {
     try {
-      await deleteClassSection(id);
+      await deleteClassSection(cs_id);
       message.success('Class section deleted successfully');
       fetchData();
     } catch (error) {
@@ -87,25 +110,64 @@ export default function ClassSections() {
   const handleSubmit = async (values) => {
     try {
       if (editingRecord) {
-        await updateClassSection(editingRecord.id, values);
+        // ClassSectionUpdate: ONLY capacity, room_number, status allowed
+        const payload = {
+          capacity: values.capacity ? Number(values.capacity) : undefined,
+          room_number: values.room_number || null,
+        };
+        await updateClassSection(editingRecord.id, payload);
         message.success('Class section updated successfully');
       } else {
-        await createClassSection(values);
+        // ClassSectionCreate: class_id, section_id, academic_year_id, capacity, room_number
+        const payload = {
+          class_id: Number(values.class_id),
+          section_id: Number(values.section_id),
+          academic_year_id: Number(values.academic_year_id),
+          capacity: values.capacity ? Number(values.capacity) : 40,
+          room_number: values.room_number || null,
+        };
+        await createClassSection(payload);
         message.success('Class section created successfully');
       }
       setModalOpen(false);
       fetchData();
     } catch (error) {
-      message.error(editingRecord ? 'Failed to update' : 'Failed to create');
+      const detail = error.response?.data?.detail;
+      if (Array.isArray(detail)) {
+        detail.forEach(e => message.error(`${e.loc?.slice(1).join('.')} — ${e.msg}`));
+      } else {
+        message.error(editingRecord ? 'Failed to update' : 'Failed to create');
+      }
     }
   };
 
   const columns = [
-    { title: 'Class', dataIndex: 'class_number', key: 'class_number', render: (text) => <strong>{text}</strong> },
-    { title: 'Section', dataIndex: 'section_name', key: 'section_name' },
-    { title: 'Academic Year', dataIndex: 'academic_year_label', key: 'academic_year_label' },
-    { title: 'Room Number', dataIndex: 'room_number', key: 'room_number' },
+    {
+      title: 'Class',
+      dataIndex: 'class_id',
+      key: 'class_id',
+      render: (class_id) => <strong>{getClassName(class_id)}</strong>,
+    },
+    {
+      title: 'Section',
+      dataIndex: 'section_id',
+      key: 'section_id',
+      render: (section_id) => getSectionName(section_id),
+    },
+    {
+      title: 'Academic Year',
+      dataIndex: 'academic_year_id',
+      key: 'academic_year_id',
+      render: (year_id) => getYearLabel(year_id),
+    },
+    { title: 'Room Number', dataIndex: 'room_number', key: 'room_number', render: (v) => v || '—' },
     { title: 'Capacity', dataIndex: 'capacity', key: 'capacity' },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (text) => <Tag color={text === 'ACTIVE' ? 'green' : 'red'}>{text === 'ACTIVE' ? 'Active' : 'Inactive'}</Tag>,
+    },
     {
       title: 'Actions', key: 'actions', fixed: 'right', width: 120,
       render: (_, record) => (
@@ -135,20 +197,26 @@ export default function ClassSections() {
         </Card>
       </div>
 
-      <Modal title={editingRecord ? 'Edit Class Section' : 'Add Class Section'} open={modalOpen} onCancel={() => setModalOpen(false)} onOk={() => form.submit()} width={600}>
+      <Modal
+        title={editingRecord ? 'Edit Class Section' : 'Add Class Section'}
+        open={modalOpen}
+        onCancel={() => setModalOpen(false)}
+        onOk={() => form.submit()}
+        width={600}
+      >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item name="class_id" label="Class" rules={[{ required: true, message: 'Required' }]}>
-            <Select placeholder="Select class" size="large">
-              {classes.map(c => <Option key={c.id} value={c.id}>Class {c.class_number}</Option>)}
+          <Form.Item name="class_id" label="Class" rules={[{ required: !editingRecord, message: 'Required' }]}>
+            <Select placeholder="Select class" size="large" disabled={!!editingRecord}>
+              {classes.map(c => <Option key={c.class_id} value={c.class_id}>Class {c.class_number}</Option>)}
             </Select>
           </Form.Item>
-          <Form.Item name="section_id" label="Section" rules={[{ required: true, message: 'Required' }]}>
-            <Select placeholder="Select section" size="large">
-              {sections.map(s => <Option key={s.id} value={s.id}>{s.name}</Option>)}
+          <Form.Item name="section_id" label="Section" rules={[{ required: !editingRecord, message: 'Required' }]}>
+            <Select placeholder="Select section" size="large" disabled={!!editingRecord}>
+              {sections.map(s => <Option key={s.section_id} value={s.section_id}>{s.section_name}</Option>)}
             </Select>
           </Form.Item>
-          <Form.Item name="academic_year_id" label="Academic Year" rules={[{ required: true, message: 'Required' }]}>
-            <Select placeholder="Select academic year" size="large">
+          <Form.Item name="academic_year_id" label="Academic Year" rules={[{ required: !editingRecord, message: 'Required' }]}>
+            <Select placeholder="Select academic year" size="large" disabled={!!editingRecord}>
               {academicYears.map(y => <Option key={y.id} value={y.id}>{y.year_label}</Option>)}
             </Select>
           </Form.Item>
