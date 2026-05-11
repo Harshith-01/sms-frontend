@@ -3,13 +3,14 @@ import { Card, Row, Col, Statistic, Table, Tag, Progress, message } from 'antd';
 import { BookOutlined, FileTextOutlined, TrophyOutlined, DollarOutlined, ClockCircleOutlined, CalendarOutlined } from '@ant-design/icons';
 import { getStudentAssignmentHistory, getStudentExamHistory } from '../../../services/assessmentService';
 import { getStudentFeeTerms } from '../../../services/feeService';
+import { getStudentAttendanceHistory } from '../../../services/attendanceService';
 import dayjs from 'dayjs';
 import './StudentDashboard.css';
 
 export default function StudentDashboard() {
   const [stats, setStats] = useState({
-    totalClasses: 8,
-    attendance: 92,
+    totalClasses: 0,
+    attendance: 0,
     totalAssignments: 0,
     completedAssignments: 0,
     upcomingExams: 0,
@@ -72,6 +73,22 @@ export default function StudentDashboard() {
         console.error('Failed to fetch fees:', feeError.response?.status);
         setStats(prev => ({ ...prev, feeBalance: 0 }));
       }
+
+      // Fetch attendance
+      try {
+        const attendanceRes = await getStudentAttendanceHistory(studentId);
+        const attendanceData = attendanceRes?.data?.data || attendanceRes?.data || {};
+        const attendancePercentage = attendanceData.attendance_percentage || attendanceData.percentage || 0;
+        const totalClassesEnrolled = attendanceData.total_classes || 0;
+        setStats(prev => ({ 
+          ...prev, 
+          attendance: Math.round(attendancePercentage * 100) / 100,
+          totalClasses: totalClassesEnrolled
+        }));
+      } catch (attendanceError) {
+        console.error('Failed to fetch attendance:', attendanceError.response?.status);
+        // Keep attendance and totalClasses at 0
+      }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
     } finally {
@@ -108,29 +125,15 @@ export default function StudentDashboard() {
     },
   ];
 
-  const upcomingClasses = [
-    {
-      id: 1,
-      subject: 'Mathematics',
-      teacher: 'Mr. John Smith',
-      time: '09:00 AM - 10:00 AM',
-      room: 'Room 101',
-    },
-    {
-      id: 2,
-      subject: 'Science',
-      teacher: 'Ms. Sarah Wilson',
-      time: '10:15 AM - 11:15 AM',
-      room: 'Room 205',
-    },
-    {
-      id: 3,
-      subject: 'English',
-      teacher: 'Mrs. Emily Brown',
-      time: '11:30 AM - 12:30 PM',
-      room: 'Room 102',
-    },
-  ];
+  const upcomingClasses = recentAssignments.length > 0 
+    ? recentAssignments.slice(0, 3).map((item) => ({
+        id: item.id,
+        subject: item.subject_name || 'Unknown Subject',
+        teacher: item.teacher_name || 'TBA',
+        time: item.submission_deadline ? dayjs(item.submission_deadline).format('hh:mm A') : 'TBA',
+        room: item.room || 'N/A',
+      }))
+    : [];
 
   const assignmentColumns = [
     { title: 'Assignment', dataIndex: 'title', key: 'title', render: (text) => <strong>{text}</strong> },

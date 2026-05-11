@@ -136,12 +136,13 @@ export default function AdminDashboard() {
       const fees     = toArray(fR.data);
       const pays     = toArray(pR.data);
 
-      const actS  = students.filter(x => x.status === 'ACTIVE').length;
+      // Note: Student API doesn't return status field; backend filters to active only
+      const actS  = students.length; // All returned students are already active
       const actT  = teachers.filter(x => x.status === 'ACTIVE').length;
       const actSt = staff.filter(x => x.status === 'ACTIVE').length;
 
-      const totalF = fees.reduce((s, f) => s + (f.total_amount || 0), 0);
-      const collF  = fees.reduce((s, f) => s + (f.paid_amount  || 0), 0);
+      const totalF = fees.reduce((s, f) => s + (Number(f.total_amount) || 0), 0);
+      const collF  = fees.reduce((s, f) => s + (Number(f.amount_paid) || 0), 0);
 
       /* charts — derived from real counts only */
       const sW = weekShape(actS, 'Students');
