@@ -22,10 +22,10 @@ import { getStudentFeeTerms, getFeePayments } from '../../../services/feeService
 import './AdminDashboard.css';
 
 /* ─── helpers ─────────────────────────────────────────────── */
-const fmtN = (v) => new Intl.NumberFormat('en-US').format(v ?? 0);
+const fmtN = (v) => new Intl.NumberFormat('en-IN').format(v ?? 0);
 const fmtD = (v) =>
-  new Intl.NumberFormat('en-US', {
-    style: 'currency', currency: 'USD', maximumFractionDigits: 0,
+  new Intl.NumberFormat('en-IN', {
+    style: 'currency', currency: 'INR', maximumFractionDigits: 0,
   }).format(v ?? 0);
 const pct  = (a, b) => (b ? Math.round((a / b) * 100) : 0);
 

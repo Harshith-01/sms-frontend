@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, Table, Tag, Progress, message } from 'antd';
+import { Card, Row, Col, Statistic, Table, Tag, Progress, message, Empty } from 'antd';
 import { BookOutlined, FileTextOutlined, TrophyOutlined, DollarOutlined, ClockCircleOutlined, CalendarOutlined } from '@ant-design/icons';
 import { getStudentAssignmentHistory, getStudentExamHistory } from '../../../services/assessmentService';
 import { getStudentFeeTerms } from '../../../services/feeService';
@@ -176,20 +176,20 @@ export default function StudentDashboard() {
         {/* Today's Classes */}
         <Col xs={24} lg={14}>
           <Card title="Today's Classes" bordered={false} className="content-card">
-            {upcomingClasses.map((item) => (
-              <div key={item.id} className="class-item">
-                <div className="class-icon">
-                  <BookOutlined />
-                </div>
-                <div className="class-details">
-                  <div className="class-subject">{item.subject}</div>
-                  <div className="class-teacher">{item.teacher}</div>
-                  <div className="class-meta">
-                    <ClockCircleOutlined /> {item.time} • {item.room}
+            {upcomingClasses.length === 0
+              ? <Empty description="No class data. View your full schedule in the Schedule tab." />
+              : upcomingClasses.map((item) => (
+                <div key={item.id} className="class-item">
+                  <div className="class-icon"><BookOutlined /></div>
+                  <div className="class-details">
+                    <div className="class-subject">{item.subject}</div>
+                    <div className="class-teacher">{item.teacher}</div>
+                    <div className="class-meta">
+                      <ClockCircleOutlined /> {item.time} • {item.room}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </Card>
         </Col>
 

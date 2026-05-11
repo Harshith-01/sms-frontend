@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, Table, Tag, Button, message } from 'antd';
+import { Card, Row, Col, Statistic, Table, Tag, Button, message, Empty } from 'antd';
 import { BookOutlined, FileTextOutlined, UserOutlined, CheckCircleOutlined, TeamOutlined, CalendarOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { getTeacherWorkload } from '../../../services/teacherService';
 import dayjs from 'dayjs';
@@ -79,32 +79,7 @@ export default function TeacherDashboard() {
     },
   ];
 
-  const todayClasses = [
-    {
-      id: 1,
-      class: 'Grade 10 - Section A',
-      subject: 'Mathematics',
-      time: '09:00 AM - 10:00 AM',
-      room: 'Room 101',
-      students: 35,
-    },
-    {
-      id: 2,
-      class: 'Grade 9 - Section B',
-      subject: 'Mathematics',
-      time: '10:15 AM - 11:15 AM',
-      room: 'Room 105',
-      students: 32,
-    },
-    {
-      id: 3,
-      class: 'Grade 10 - Section C',
-      subject: 'Mathematics',
-      time: '02:00 PM - 03:00 PM',
-      room: 'Room 101',
-      students: 38,
-    },
-  ];
+  const todayClasses = [];
 
   const assignmentColumns = [
     { title: 'Assignment', dataIndex: 'title', key: 'title', render: (text) => <strong>{text || '—'}</strong> },
@@ -124,7 +99,7 @@ export default function TeacherDashboard() {
       {/* Welcome Section */}
       <div className="dashboard-welcome">
         <h1 className="dashboard-welcome-title">Good Morning, Teacher!</h1>
-        <p className="dashboard-welcome-subtitle">You have {todayClasses.length} classes scheduled for today.</p>
+        <p className="dashboard-welcome-subtitle">Here's your teaching overview and recent activity.</p>
       </div>
 
       {/* Stats Cards */}
@@ -150,22 +125,20 @@ export default function TeacherDashboard() {
         {/* Today's Classes */}
         <Col xs={24} lg={14}>
           <Card title="Today's Classes" bordered={false} className="content-card">
-            {todayClasses.map((item) => (
-              <div key={item.id} className="class-item">
-                <div className="class-icon">
-                  <BookOutlined />
-                </div>
-                <div className="class-details">
-                  <div className="class-name">{item.class} - {item.subject}</div>
-                  <div className="class-meta">
-                    <ClockCircleOutlined /> {item.time} • {item.room} • 👥 {item.students} students
+            {todayClasses.length === 0
+              ? <Empty description="No classes scheduled. View your full schedule in the Schedule tab." />
+              : todayClasses.map((item) => (
+                <div key={item.id} className="class-item">
+                  <div className="class-icon"><BookOutlined /></div>
+                  <div className="class-details">
+                    <div className="class-name">{item.class} - {item.subject}</div>
+                    <div className="class-meta">
+                      <ClockCircleOutlined /> {item.time} • {item.room} • 👥 {item.students} students
+                    </div>
                   </div>
+                  <Button type="primary" size="small">Take Attendance</Button>
                 </div>
-                <Button type="primary" size="small">
-                  Take Attendance
-                </Button>
-              </div>
-            ))}
+              ))}
           </Card>
         </Col>
 
