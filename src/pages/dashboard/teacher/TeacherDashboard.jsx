@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, Row, Col, Statistic, Table, Tag, Button, message, Empty } from 'antd';
 import { BookOutlined, FileTextOutlined, UserOutlined, CheckCircleOutlined, TeamOutlined, CalendarOutlined, ClockCircleOutlined } from '@ant-design/icons';
-import { getTeacherWorkload } from '../../../services/teacherService';
+import { getTeacherWorkload, getTeacherProfile } from '../../../services/teacherService';
 import dayjs from 'dayjs';
 import './TeacherDashboard.css';
 
@@ -17,6 +17,7 @@ export default function TeacherDashboard() {
   const [recentAssignments, setRecentAssignments] = useState([]);
   const [upcomingExams, setUpcomingExams] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [teacherName, setTeacherName] = useState('');
 
   useEffect(() => {
     fetchDashboardData();
@@ -25,6 +26,14 @@ export default function TeacherDashboard() {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
+      // Fetch teacher profile for personalized welcome
+      try {
+        const profileRes = await getTeacherProfile();
+        setTeacherName(profileRes?.data?.details?.full_name || '');
+      } catch (e) {
+        console.error('Failed to fetch teacher profile', e);
+      }
+
       // Use GET /teachers/me/assessment-workload
       const workloadRes = await getTeacherWorkload();
       const workload = workloadRes?.data?.assessment_workload;
@@ -37,12 +46,17 @@ export default function TeacherDashboard() {
           ? workload.evaluated_exam_subjects
           : [];
 
+        const uniqueClasses = new Set(
+          examSubjects.map(s => s.class_section_id).filter(Boolean)
+        ).size;
+
         setRecentAssignments(assignments.slice(0, 5));
         setUpcomingExams(examSubjects.slice(0, 5));
         setStats(prev => ({
           ...prev,
           totalAssignments: assignments.length,
           totalExams: examSubjects.length,
+          totalClasses: uniqueClasses,
         }));
       }
     } catch (error) {
@@ -90,15 +104,15 @@ export default function TeacherDashboard() {
 
   const examColumns = [
     { title: 'Exam', dataIndex: 'exam_name', key: 'exam_name', render: (text) => <strong>{text || '—'}</strong> },
-    { title: 'Date', dataIndex: 'start_date', key: 'start_date', render: (text) => text ? dayjs(text).format('DD/MM/YYYY') : '-' },
-    { title: 'Status', dataIndex: 'status', key: 'status', render: (text) => <Tag>{text || '—'}</Tag> },
+    { title: 'Type', dataIndex: 'exam_type', key: 'exam_type', render: (text) => text ? <Tag color="blue">{text}</Tag> : '—' },
+    { title: 'Component', dataIndex: 'component_type', key: 'component_type', render: (text) => <Tag>{text || '—'}</Tag> },
   ];
 
   return (
     <div className="teacher-dashboard">
       {/* Welcome Section */}
       <div className="dashboard-welcome">
-        <h1 className="dashboard-welcome-title">Good Morning, Teacher!</h1>
+        <h1 className="dashboard-welcome-title">Good Morning{teacherName ? `, ${teacherName.split(' ')[0]}` : ''}!</h1>
         <p className="dashboard-welcome-subtitle">Here's your teaching overview and recent activity.</p>
       </div>
 

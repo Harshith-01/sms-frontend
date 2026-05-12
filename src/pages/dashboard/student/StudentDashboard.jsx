@@ -143,6 +143,15 @@ export default function StudentDashboard() {
     { title: 'Marks', dataIndex: 'marks_obtained', key: 'marks_obtained', render: (text, record) => text ? `${text}/${record.total_marks}` : '-' },
   ];
 
+  const examResultColumns = [
+    { title: 'Exam', dataIndex: 'exam_name', key: 'exam_name', render: (text) => <strong>{text || '—'}</strong> },
+    { title: 'Subject', dataIndex: 'subject_name', key: 'subject_name' },
+    { title: 'Marks', key: 'marks', render: (_, r) => r.final_marks != null ? `${r.final_marks}/${r.max_marks || 100}` : '—' },
+    { title: 'Percentage', dataIndex: 'percentage', key: 'percentage', render: (v) => v != null ? `${v}%` : '—' },
+    { title: 'Grade', dataIndex: 'grade_label', key: 'grade_label', render: (text) => text ? <Tag color="purple">{text}</Tag> : '—' },
+    { title: 'Result', dataIndex: 'is_pass', key: 'is_pass', render: (v) => v === true ? <Tag color="green">Pass</Tag> : (v === false ? <Tag color="red">Fail</Tag> : '—') },
+  ];
+
   return (
     <div className="student-dashboard">
       {/* Welcome Section */}
@@ -224,6 +233,19 @@ export default function StudentDashboard() {
           pagination={false}
         />
       </Card>
+
+      {/* Exam Results Table */}
+      {upcomingExams.length > 0 && (
+        <Card title="Exam Results" style={{ marginTop: 24 }} bordered={false}>
+          <Table
+            columns={examResultColumns}
+            dataSource={upcomingExams}
+            rowKey={(r, i) => `${r.exam_id || i}-${r.subject_id || i}`}
+            loading={loading}
+            pagination={false}
+          />
+        </Card>
+      )}
     </div>
   );
 }
